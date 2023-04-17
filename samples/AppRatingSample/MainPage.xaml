@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="AppRatingSample.MainPage">
+    <ScrollView>
+        <StackLayout
+            HorizontalOptions="FillAndExpand"
+            VerticalOptions="CenterAndExpand"
+            Padding="16, 0">
+            <Button
+                VerticalOptions="CenterAndExpand"
+                HorizontalOptions="FillAndExpand"
+                Margin="16"
+                BackgroundColor="Blue"
+                TextColor="White"
+                Text="OPEN IN APP RATING"
+                Clicked="InAppRating_Clicked" />
+            <Button
+                VerticalOptions="CenterAndExpand"
+                HorizontalOptions="FillAndExpand"
+                Margin="16"
+                BackgroundColor="CornflowerBlue"
+                TextColor="White"
+                Text="OPEN RATING ON STORE OR BROWSER"
+                Clicked="AppRateOnStore_Clicked" />
+        </StackLayout>
+    </ScrollView>
+</ContentPage>
