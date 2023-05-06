@@ -9,6 +9,7 @@ namespace AppRatingSample
         // We are using the Instagram application as an example here
         private const string androidPackageName = "com.instagram.android";
         private const string iOSApplicationId = "id389801252";
+        private const string windowsProductId = "9nblggh5l9xt";
 
         public MainPage(IAppRating appRating)
         {
@@ -51,7 +52,7 @@ namespace AppRatingSample
         {
             Dispatcher.Dispatch(async () =>
             {
-                await _appRating.PerformRatingOnStoreAsync(packageName: androidPackageName, applicationId: iOSApplicationId);
+                await _appRating.PerformRatingOnStoreAsync(packageName: androidPackageName, applicationId: iOSApplicationId, productId: windowsProductId);
             });
 
             Preferences.Set("application_rated", true);
