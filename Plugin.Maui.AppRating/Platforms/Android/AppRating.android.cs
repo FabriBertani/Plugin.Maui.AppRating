@@ -49,7 +49,7 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, IOnComplet
     /// </summary>
     /// <param name="packageName">Use <b>packageName</b> for Android.</param>
     /// <param name="applicationId">Use <b>applicationId</b> for iOS.</param>
-    /// <param name="productId">Use <b>productId</b> for Windows</param>
+    /// <param name="productId">Use <b>productId</b> for Windows.</param>
     public Task PerformRatingOnStoreAsync(string packageName = "", string applicationId = "", string productId = "")
     {
         var tcs = new TaskCompletionSource<bool>();
@@ -61,12 +61,6 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, IOnComplet
 
             try
             {
-                var currentActivity = Platform.AppContext;
-
-                var versionedPackage = new VersionedPackage(currentActivity.PackageName, 0);
-
-                var info = currentActivity.PackageManager?.GetPackageInfo(versionedPackage, PackageInfoFlags.Activities);
-
                 Intent intent = new(Intent.ActionView, Android.Net.Uri.Parse(url));
                 intent.AddFlags(ActivityFlags.ClearTop);
                 intent.AddFlags(ActivityFlags.NewTask | ActivityFlags.ResetTaskIfNeeded);
@@ -136,7 +130,7 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, IOnComplet
         }
     }
 
-    private void ShowAlertMessage(string title, string message)
+    private static void ShowAlertMessage(string title, string message)
     {
         if (handler?.Looper != Looper.MainLooper)
             handler = new Handler(Looper.MainLooper);

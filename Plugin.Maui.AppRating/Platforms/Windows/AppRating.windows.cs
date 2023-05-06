@@ -1,5 +1,4 @@
-﻿using Microsoft.UI.Xaml.Controls;
-using Windows.ApplicationModel.Core;
+﻿using Windows.ApplicationModel.Core;
 using Windows.Services.Store;
 using Windows.UI.Core;
 using Launcher = Windows.System.Launcher;

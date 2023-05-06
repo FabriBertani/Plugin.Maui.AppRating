@@ -15,7 +15,7 @@ partial class AppRatingImplementation : IAppRating
 
         if (UIDevice.CurrentDevice.CheckSystemVersion(10, 3))
         {
-            if (UIDevice.CurrentDevice.CheckSystemVersion(10, 4))
+            if (UIDevice.CurrentDevice.CheckSystemVersion(14, 0))
             {
                 var windowScene = UIApplication.SharedApplication?.ConnectedScenes?
                     .ToArray<UIScene>()?
@@ -50,38 +50,34 @@ partial class AppRatingImplementation : IAppRating
     /// </summary>
     /// <param name="packageName">Use <b>packageName</b> for Android.</param>
     /// <param name="applicationId">Use <b>applicationId</b> for iOS.</param>
-    /// <param name="productId">Use <b>productId</b> for Windows</param>
+    /// <param name="productId">Use <b>productId</b> for Windows.</param>
     public Task PerformRatingOnStoreAsync(string packageName = "", string applicationId = "", string productId = "")
     {
         var tcs = new TaskCompletionSource<bool>();
 
-        if (!string.IsNullOrEmpty(applicationId))
-        {
-            var url = string.Empty;
-
-            url = $"itms-apps://itunes.apple.com/app/id{applicationId}?action=write-review";
-
-            var nativeUrl = new NSUrl(url);
-
-            try
-            {
-                if (UIDevice.CurrentDevice.CheckSystemVersion(14, 2))
-                    UIApplication.SharedApplication.OpenUrl(nativeUrl);
-                else
-                    UIApplication.SharedApplication.OpenUrlAsync(nativeUrl, new UIApplicationOpenUrlOptions());
-
-                tcs.SetResult(true);
-            }
-            catch (Exception)
-            {
-                DisplayErrorAlert("Cannot open rating because App Store was unable to launch.");
-
-                tcs.SetResult(false);
-            }
-        }
-        else
+        if (string.IsNullOrEmpty(applicationId))
         {
             DisplayErrorAlert("Please provide the ApplicationId for Apple App Store");
+
+            tcs.SetResult(false);
+
+            return tcs.Task;
+        }
+
+        var url = new NSUrl($"itms-apps://itunes.apple.com/app/id{applicationId}?action=write-review");
+
+        try
+        {
+            if (UIDevice.CurrentDevice.CheckSystemVersion(10, 0))
+                UIApplication.SharedApplication.OpenUrlAsync(url, new UIApplicationOpenUrlOptions());
+            else
+                UIApplication.SharedApplication.OpenUrl(url);
+
+            tcs.SetResult(true);
+        }
+        catch (Exception)
+        {
+            DisplayErrorAlert("Cannot open rating because App Store was unable to launch.");
 
             tcs.SetResult(false);
         }
@@ -89,7 +85,7 @@ partial class AppRatingImplementation : IAppRating
         return tcs.Task;
     }
 
-    private void DisplayErrorAlert(string errorMessage)
+    private static void DisplayErrorAlert(string errorMessage)
     {
         NSRunLoop.Main.InvokeOnMainThread(() =>
         {
@@ -103,18 +99,18 @@ partial class AppRatingImplementation : IAppRating
 
             alert.AddAction(positiveAction);
 
-            if (UIDevice.CurrentDevice.CheckSystemVersion(10, 3))
-            {
-                var window = UIApplication.SharedApplication.Windows.FirstOrDefault(o => o.IsKeyWindow);
-
-                window?.RootViewController?.PresentViewController(alert, true, null);
-            }
-            else if (UIDevice.CurrentDevice.CheckSystemVersion(15, 0))
+            if (UIDevice.CurrentDevice.CheckSystemVersion(15, 0))
             {
                 var window = UIApplication.SharedApplication.ConnectedScenes
                     .OfType<UIWindowScene>()
                     .SelectMany(s => s.Windows)
                     .FirstOrDefault(w => w.IsKeyWindow);
+
+                window?.RootViewController?.PresentViewController(alert, true, null);
+            }
+            else if (UIDevice.CurrentDevice.CheckSystemVersion(14, 0))
+            {
+                var window = UIApplication.SharedApplication.Windows.FirstOrDefault(o => o.IsKeyWindow);
 
                 window?.RootViewController?.PresentViewController(alert, true, null);
             }
