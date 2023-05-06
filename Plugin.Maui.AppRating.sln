@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plugin.Maui.AppRating", "Pl
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{ABF0D43C-C3FE-491C-9BCA-3A675EAA97CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppRatingSample", "samples\AppRatingSample\AppRatingSample.csproj", "{6EDA51C6-E702-4922-A571-4DD4701D2446}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppRatingSample", "samples\AppRatingSample\AppRatingSample.csproj", "{6EDA51C6-E702-4922-A571-4DD4701D2446}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -10,7 +10,8 @@ public interface IAppRating
     /// <summary>
     /// Perform rating on the current OS store app or open the store page on browser.
     /// </summary>
-    /// <param name="packageName">Use this for Android.</param>
-    /// <param name="applicationId">Use this for iOS.</param>
-    Task PerformRatingOnStoreAsync(string packageName = "", string applicationId = "");
+    /// <param name="packageName">Use <b>packageName</b> for Android.</param>
+    /// <param name="applicationId">Use <b>applicationId</b> for iOS.</param>
+    /// <param name="productId">Use <b>productId</b> for Windows</param>
+    Task PerformRatingOnStoreAsync(string packageName = "", string applicationId = "", string productId = "");
 }
