@@ -9,6 +9,8 @@
 |-------------------|:------------------:|
 |.Net MAUI Android|API 21+|
 |.Net MAUI iOS|iOS 11.0+|
+|Windows|10.0.17763+|
+|Mac Catalyst|14.0+|
 
 ## Installation
 `Plugin.Maui.AppRating` is available via NuGet, grab the latest package and install it in your solution:
@@ -26,6 +28,11 @@ Finally, add the default instance of the plugin as a singleton to inject it in y
 ```csharp
 builder.Services.AddSingleton<IAppRating>(AppRating.Default);
 ```
+
+## Version 1.1.0
+### New Features
+- Added support to Windows and Mac Catalyst :exclamation:
+- Fixes and improvements.
 
 ## API Usage
 Call the injected interface in any page or viewmodel to gain access to the APIs.
@@ -58,14 +65,14 @@ If neither the store page nor the browser store page works, it will display an a
 await _appRating.PerformRatingOnStoreAsync(packageName: "com.instagram.android");
 ```
 
-### iOS
+### iOS | Mac Catalyst
 ```csharp
 /// <summary>
 /// Perform rating without leaving the app.
 /// </summary>
 Task PerformInAppRateAsync();
 ```
-> **For iOS**: if the device current OS version is 10.3 or newer, this method will raise an in-app review popup of your current application, otherwise, it will display an alert announcing that it's not supported.
+> if the device current OS version is _10.3+_ in **iOS**, or _14.0+_ in **Mac Catalyst**, this method will raise an in-app review popup of your current application, otherwise, it will display an alert announcing that it's not supported.
 
 ```csharp
 /// <summary>
@@ -84,6 +91,32 @@ If the method fails. it will display an alert announcing the error.
 await _appRating.PerformRatingOnStoreAsync(applicationId: "id389801252");
 ```
 
+### Windows
+```csharp
+/// <summary>
+/// Perform rating without leaving the app.
+/// </summary>
+Task PerformInAppRateAsync();
+```
+> This method will raise an in-app review dialog of your current application, otherwise, it will display an alert announcing that it's not supported.
+
+```csharp
+/// <summary>
+/// Perform rating on the current OS store app or open the store page on browser.
+/// </summary>
+Task PerformRatingOnStoreAsync();
+```
+> This method will open the **_Microsoft Store application_** on the store page of your current application. Otherwise, it will try to open the store page on the browser.
+
+If this method fails, it will display an alert announcing the error.
+
+`productId` property is the **ProductId** of your application and it **must** be provided as a named argument to open the store page on the store app or browser.
+
+Example
+```csharp
+await _appRating.PerformRatingOnStoreAsync(productId: "9nblggh5l9xt");
+```
+
 ## Usage
 > :warning: **Warning** - You should be careful about **how and when** you ask users to rate your app, there may be penalties from stores. As for advice, I recommend using a counter on the app start and storage that count, then when the counter reaches a specific number, display a dialogue asking the users if they want to rate the app, if they decline the offer, reset the counter to ask them later, also leave the option to do it themselves.
 
@@ -95,6 +128,7 @@ public partial class MainPage : ContentPage
     // We are using the Instagram application as an example here
     private const string androidPackageName = "com.instagram.android";
     private const string iOSApplicationId = "id389801252";
+    private const string windowsProductId = "9nblggh5l9xt";
 
     public MainPage(IAppRating appRating)
     {
@@ -137,7 +171,7 @@ public partial class MainPage : ContentPage
     {
         Dispatcher.Dispatch(async () =>
         {
-            await _appRating.PerformRatingOnStoreAsync(packageName: androidPackageName, applicationId: iOSApplicationId);
+            await _appRating.PerformRatingOnStoreAsync(packageName: androidPackageName, applicationId: iOSApplicationId, productId: windowsProductId);
         });
 
         Preferences.Set("application_rated", true);
