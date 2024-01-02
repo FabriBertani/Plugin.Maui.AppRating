@@ -1,20 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net7.0-android;net7.0-ios;net7.0-maccatalyst</TargetFrameworks>
-        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net7.0-windows10.0.19041.0</TargetFrameworks>
-        <!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
-        <!-- <TargetFrameworks>$(TargetFrameworks);net7.0-tizen</TargetFrameworks> -->
+        <TargetFrameworks>net7.0;net7.0-android;net7.0-ios;net7.0-maccatalyst;net8.0;net8.0-android;net8.0-ios;net8.0-maccatalyst</TargetFrameworks>
+        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net7.0-windows10.0.19041.0;net8.0-windows10.0.19041.0</TargetFrameworks>
         <UseMaui>true</UseMaui>
         <SingleProject>true</SingleProject>
         <ImplicitUsings>enable</ImplicitUsings>
+        <SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
 
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
-        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
         <Title>Plugin.Maui.AppRating</Title>
@@ -38,56 +36,12 @@
         <PackageReleaseNotes>https://github.com/FabriBertani/Plugin.Maui.AppRating/blob/main/CHANGELOG.md</PackageReleaseNotes>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0|AnyCPU'">
-        <ApplicationTitle>Plugin.Maui.AppRating</ApplicationTitle>
-        <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
-        <ApplicationVersion>1</ApplicationVersion>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0|AnyCPU'">
-        <ApplicationTitle>Plugin.Maui.AppRating</ApplicationTitle>
-        <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
-        <ApplicationVersion>1</ApplicationVersion>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-android|AnyCPU'">
-        <ApplicationTitle>Plugin.Maui.AppRating</ApplicationTitle>
-        <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
-        <ApplicationVersion>1</ApplicationVersion>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-android|AnyCPU'">
-        <ApplicationTitle>Plugin.Maui.AppRating</ApplicationTitle>
-        <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
-        <ApplicationVersion>1</ApplicationVersion>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-ios|AnyCPU'">
-        <ApplicationTitle>Plugin.Maui.AppRating</ApplicationTitle>
-        <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
-        <ApplicationVersion>1</ApplicationVersion>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-ios|AnyCPU'">
-        <ApplicationTitle>Plugin.Maui.AppRating</ApplicationTitle>
-        <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
-        <ApplicationVersion>1</ApplicationVersion>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-maccatalyst|AnyCPU'">
-        <ApplicationTitle>Plugin.Maui.AppRating</ApplicationTitle>
-        <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
-        <ApplicationVersion>1</ApplicationVersion>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-maccatalyst|AnyCPU'">
-        <ApplicationTitle>Plugin.Maui.AppRating</ApplicationTitle>
-        <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
-        <ApplicationVersion>1</ApplicationVersion>
-    </PropertyGroup>
+    <ItemGroup Condition="!($(TargetFramework.StartsWith('net')) == true AND $(TargetFramework.EndsWith('.0')) == true AND $(TargetFramework.Contains('-')) != true)">
+        <Compile Remove="**\*.net.cs" />
+        <None Include="**\*.net.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    </ItemGroup>
 
     <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
-        <PackageReference Include="Xamarin.Google.Android.Play.Core" Version="1.10.3.4" />
         <PackageReference Include="Xamarin.Google.Android.Play.Core" Version="1.10.3.9" />
     </ItemGroup>
 
