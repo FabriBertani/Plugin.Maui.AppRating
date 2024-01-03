@@ -1,5 +1,6 @@
 ﻿using Foundation;
 using StoreKit;
+using System.Runtime.Versioning;
 using UIKit;
 
 namespace Plugin.Maui.AppRating;
@@ -17,11 +18,9 @@ partial class AppRatingImplementation : IAppRating
         {
             if (UIDevice.CurrentDevice.CheckSystemVersion(14, 0))
             {
-                var windowScene = UIApplication.SharedApplication?.ConnectedScenes?
+                if (UIApplication.SharedApplication?.ConnectedScenes?
                     .ToArray<UIScene>()?
-                    .FirstOrDefault(ws => ws.ActivationState == UISceneActivationState.ForegroundActive) as UIWindowScene;
-
-                if (windowScene != null)
+                    .FirstOrDefault(ws => ws.ActivationState == UISceneActivationState.ForegroundActive) is UIWindowScene windowScene)
                 {
                     SKStoreReviewController.RequestReview(windowScene);
 
@@ -31,7 +30,9 @@ partial class AppRatingImplementation : IAppRating
                 }
             }
 
+#pragma warning disable CA1422
             SKStoreReviewController.RequestReview();
+#pragma warning restore CA1422
 
             tcs.SetResult(true);
         }

@@ -15,11 +15,9 @@ partial class AppRatingImplementation : IAppRating
 
         if (UIDevice.CurrentDevice.CheckSystemVersion(14, 0))
         {
-            var windowScene = UIApplication.SharedApplication?.ConnectedScenes?
+            if (UIApplication.SharedApplication?.ConnectedScenes?
                 .ToArray<UIScene>()?
-                .FirstOrDefault(ws => ws.ActivationState == UISceneActivationState.ForegroundActive) as UIWindowScene;
-
-            if (windowScene != null)
+                .FirstOrDefault(ws => ws.ActivationState == UISceneActivationState.ForegroundActive) is UIWindowScene windowScene)
             {
                 SKStoreReviewController.RequestReview(windowScene);
 
