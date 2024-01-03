@@ -48,6 +48,16 @@ partial class AppRatingImplementation : IAppRating
     /// <summary>
     /// Perform rating on the current OS store app or open the store page on browser.
     /// </summary>
+    /// <param name="appId">Identifier of the application, use <b>packageName</b> for Android,
+    /// <b>applicationId</b> for iOS and/or <b>productId</b> for Windows</param>
+    public Task PerformRatingOnStoreAsync(string appId)
+    {
+        return PerformRatingOnStoreAsync(applicationId: appId);
+    }
+
+    /// <summary>
+    /// Perform rating on the current OS store app or open the store page on browser.
+    /// </summary>
     /// <param name="packageName">Use <b>packageName</b> for Android.</param>
     /// <param name="applicationId">Use <b>applicationId</b> for iOS.</param>
     /// <param name="productId">Use <b>productId</b> for Windows.</param>
