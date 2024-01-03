@@ -5,7 +5,7 @@ public interface IAppRating
     /// <summary>
     /// Perform rating without leaving the app.
     /// </summary>
-    Task PerformInAppRateAsync();
+    Task PerformInAppRateAsync(bool isTestOrDebugMode = false);
 
     /// <summary>
     /// Perform rating on the current OS store app or open the store page on browser.

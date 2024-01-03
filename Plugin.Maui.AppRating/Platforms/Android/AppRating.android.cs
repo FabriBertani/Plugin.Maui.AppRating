@@ -3,6 +3,7 @@ using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using Xamarin.Google.Android.Play.Core.Review;
+using Xamarin.Google.Android.Play.Core.Review.Testing;
 using Xamarin.Google.Android.Play.Core.Tasks;
 using Task = System.Threading.Tasks.Task;
 
@@ -10,36 +11,38 @@ namespace Plugin.Maui.AppRating;
 
 partial class AppRatingImplementation : Java.Lang.Object, IAppRating, IOnCompleteListener
 {
-    private static volatile Handler? handler;
+    private static volatile Handler? _handler;
 
-    private TaskCompletionSource<bool>? inAppRateTcs;
+    private TaskCompletionSource<bool>? _inAppRateTcs;
 
-    private IReviewManager? reviewManager;
+    private IReviewManager? _reviewManager;
 
-    private Xamarin.Google.Android.Play.Core.Tasks.Task? launchTask;
+    private Xamarin.Google.Android.Play.Core.Tasks.Task? _launchTask;
 
-    private bool forceReturn;
+    private bool _forceReturn;
 
     /// <summary>
     /// Open Android in-app review popup of your current application.
     /// </summary>
-    public async Task PerformInAppRateAsync()
+    public async Task PerformInAppRateAsync(bool isTestOrDebugMode = false)
     {
-        inAppRateTcs?.TrySetCanceled();
+        _inAppRateTcs?.TrySetCanceled();
 
-        inAppRateTcs = new TaskCompletionSource<bool>();
+        _inAppRateTcs = new();
 
-        reviewManager = ReviewManagerFactory.Create(Android.App.Application.Context);
+        _reviewManager = isTestOrDebugMode
+            ? new FakeReviewManager(Android.App.Application.Context)
+            : ReviewManagerFactory.Create(Android.App.Application.Context);
 
-        forceReturn = false;
+        _forceReturn = false;
 
-        var request = reviewManager.RequestReviewFlow();
+        var request = _reviewManager.RequestReviewFlow();
 
         request.AddOnCompleteListener(this);
 
-        await inAppRateTcs.Task;
+        await _inAppRateTcs.Task;
 
-        reviewManager.Dispose();
+        _reviewManager.Dispose();
 
         request.Dispose();
     }
@@ -52,16 +55,21 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, IOnComplet
     /// <param name="productId">Use <b>productId</b> for Windows.</param>
     public Task PerformRatingOnStoreAsync(string packageName = "", string applicationId = "", string productId = "")
     {
-        var tcs = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> tcs = new();
 
         if (!string.IsNullOrEmpty(packageName))
         {
-            var context = Android.App.Application.Context;
-            var url = $"market:details?id={packageName}";
+            var context = Platform.AppContext;
+            var url = $"market://details?id={packageName}";
 
             try
             {
                 Intent intent = new(Intent.ActionView, Android.Net.Uri.Parse(url));
+                intent.AddFlags(ActivityFlags.NoHistory);
+                if (Build.VERSION.SdkInt >= BuildVersionCodes.Lollipop)
+                    intent.AddFlags(ActivityFlags.NewDocument);
+                else
+                    intent.AddFlags(ActivityFlags.ClearWhenTaskReset);
                 intent.AddFlags(ActivityFlags.ClearTop);
                 intent.AddFlags(ActivityFlags.NewTask | ActivityFlags.ResetTaskIfNeeded);
 
@@ -100,11 +108,11 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, IOnComplet
 
     public void OnComplete(Xamarin.Google.Android.Play.Core.Tasks.Task task)
     {
-        if (!task.IsSuccessful || forceReturn)
+        if (!task.IsSuccessful || _forceReturn)
         {
-            inAppRateTcs?.TrySetResult(forceReturn);
+            _inAppRateTcs?.TrySetResult(_forceReturn);
 
-            launchTask?.Dispose();
+            _launchTask?.Dispose();
 
             return;
         }
@@ -113,17 +121,17 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, IOnComplet
         {
             ReviewInfo reviewInfo = (ReviewInfo)task.GetResult(Java.Lang.Class.FromType(typeof(ReviewInfo)));
 
-            forceReturn = true;
+            _forceReturn = true;
 
-            launchTask = reviewManager?.LaunchReviewFlow(Platform.CurrentActivity, reviewInfo);
+            _launchTask = _reviewManager?.LaunchReviewFlow(Platform.CurrentActivity, reviewInfo);
 
-            launchTask?.AddOnCompleteListener(this);
+            _launchTask?.AddOnCompleteListener(this);
         }
         catch (Exception ex)
         {
             ShowAlertMessage("Error", "There was an error launching in-app review. Please try again.");
 
-            inAppRateTcs?.TrySetResult(false);
+            _inAppRateTcs?.TrySetResult(false);
 
             System.Diagnostics.Debug.WriteLine($"Error message: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"Stacktrace: {ex}");
@@ -132,16 +140,16 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, IOnComplet
 
     private static void ShowAlertMessage(string title, string message)
     {
-        if (handler?.Looper != Looper.MainLooper)
-            handler = new Handler(Looper.MainLooper);
+        if (_handler?.Looper != Looper.MainLooper)
+            _handler = new Handler(Looper.MainLooper!);
 
-        handler?.Post(() =>
+        _handler?.Post(() =>
         {
             var dialog = new AlertDialog.Builder(Platform.CurrentActivity);
             dialog.SetTitle(title);
             dialog.SetMessage(message);
 
-            dialog.SetPositiveButton("OK", (EventHandler<DialogClickEventArgs>)null);
+            dialog.SetPositiveButton("OK", (s, e) => { });
 
             var alert = dialog.Create();
 
@@ -151,6 +159,6 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, IOnComplet
             alert?.Show();
         });
 
-        handler?.Dispose();
+        _handler?.Dispose();
     }
 }

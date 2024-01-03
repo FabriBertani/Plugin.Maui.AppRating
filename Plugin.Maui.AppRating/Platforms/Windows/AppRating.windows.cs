@@ -11,7 +11,7 @@ partial class AppRatingImplementation : IAppRating
     /// Open an in-app review popup of your current application.
     /// </summary>
     /// <remarks>To use this method the <b>Target Version</b> must be 10.0.17763 or above.</remarks>
-    public async Task PerformInAppRateAsync()
+    public async Task PerformInAppRateAsync(bool isTestOrDebugMode)
     {
         var dispatcher = CoreApplication.MainView?.CoreWindow?.Dispatcher;
 

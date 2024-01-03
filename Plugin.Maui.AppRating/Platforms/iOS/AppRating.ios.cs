@@ -9,7 +9,7 @@ partial class AppRatingImplementation : IAppRating
     /// <summary>
     /// Open in-app review popup of your current application.
     /// </summary>
-    public Task PerformInAppRateAsync()
+    public Task PerformInAppRateAsync(bool isTestOrDebugMode)
     {
         var tcs = new TaskCompletionSource<bool>();
 
