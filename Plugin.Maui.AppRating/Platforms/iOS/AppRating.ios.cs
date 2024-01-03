@@ -1,5 +1,6 @@
 ﻿using Foundation;
 using StoreKit;
+using System.Runtime.Versioning;
 using UIKit;
 
 namespace Plugin.Maui.AppRating;
@@ -9,7 +10,7 @@ partial class AppRatingImplementation : IAppRating
     /// <summary>
     /// Open in-app review popup of your current application.
     /// </summary>
-    public Task PerformInAppRateAsync()
+    public Task PerformInAppRateAsync(bool isTestOrDebugMode)
     {
         var tcs = new TaskCompletionSource<bool>();
 
@@ -17,11 +18,9 @@ partial class AppRatingImplementation : IAppRating
         {
             if (UIDevice.CurrentDevice.CheckSystemVersion(14, 0))
             {
-                var windowScene = UIApplication.SharedApplication?.ConnectedScenes?
+                if (UIApplication.SharedApplication?.ConnectedScenes?
                     .ToArray<UIScene>()?
-                    .FirstOrDefault(ws => ws.ActivationState == UISceneActivationState.ForegroundActive) as UIWindowScene;
-
-                if (windowScene != null)
+                    .FirstOrDefault(ws => ws.ActivationState == UISceneActivationState.ForegroundActive) is UIWindowScene windowScene)
                 {
                     SKStoreReviewController.RequestReview(windowScene);
 
@@ -31,7 +30,9 @@ partial class AppRatingImplementation : IAppRating
                 }
             }
 
+#pragma warning disable CA1422
             SKStoreReviewController.RequestReview();
+#pragma warning restore CA1422
 
             tcs.SetResult(true);
         }
@@ -43,6 +44,16 @@ partial class AppRatingImplementation : IAppRating
         }
 
         return tcs.Task;
+    }
+
+    /// <summary>
+    /// Perform rating on the current OS store app or open the store page on browser.
+    /// </summary>
+    /// <param name="appId">Identifier of the application, use <b>packageName</b> for Android,
+    /// <b>applicationId</b> for iOS and/or <b>productId</b> for Windows</param>
+    public Task PerformRatingOnStoreAsync(string appId)
+    {
+        return PerformRatingOnStoreAsync(applicationId: appId);
     }
 
     /// <summary>

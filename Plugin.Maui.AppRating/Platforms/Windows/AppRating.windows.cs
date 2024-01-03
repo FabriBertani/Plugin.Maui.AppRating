@@ -11,7 +11,7 @@ partial class AppRatingImplementation : IAppRating
     /// Open an in-app review popup of your current application.
     /// </summary>
     /// <remarks>To use this method the <b>Target Version</b> must be 10.0.17763 or above.</remarks>
-    public async Task PerformInAppRateAsync()
+    public async Task PerformInAppRateAsync(bool isTestOrDebugMode)
     {
         var dispatcher = CoreApplication.MainView?.CoreWindow?.Dispatcher;
 
@@ -37,6 +37,16 @@ partial class AppRatingImplementation : IAppRating
                     break;
             }
         });
+    }
+
+    /// <summary>
+    /// Perform rating on the current OS store app or open the store page on browser.
+    /// </summary>
+    /// <param name="appId">Identifier of the application, use <b>packageName</b> for Android,
+    /// <b>applicationId</b> for iOS and/or <b>productId</b> for Windows</param>
+    public Task PerformRatingOnStoreAsync(string appId)
+    {
+        return PerformRatingOnStoreAsync(productId: appId);
     }
 
     /// <summary>
