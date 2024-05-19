@@ -29,10 +29,23 @@ Finally, add the default instance of the plugin as a singleton to inject it in y
 builder.Services.AddSingleton<IAppRating>(AppRating.Default);
 ```
 
-## Version 1.1.0
+## Version 1.2.0
 ### New Features
-- Added support to Windows and Mac Catalyst :exclamation:
-- Fixes and improvements.
+- Added .Net8 support to all platforms.
+- Updated libraries.
+- Added `FakeReviewManager` to allow Android.
+- Fixed Windows implementation.
+
+## :warning: Considerations regarding new platform policies :warning:
+### Android
+- It's highly recommended to test this or any other store review plugin on a real device with Google Play installed instead of using an emulator.
+- Due to new regulations from Google, the review dialogue will not be displayed on manual distribution or debug mode (apparently), only on apps published and distributed via Google Play Store, however, it is recommended to release your app under "Internal distribution" or "Internal App Sharing" to effectively test the store review popup. [Read here for more information](https://developer.android.com/guide/playcore/in-app-review/test). Additionally, you can debug the error using `adb logcat`.
+- `FakeReviewManager` is a new feature released by Google, primarily designed for testing and unit testing purposes. It operates without a user interface (UI). For more information, visit the [official Android documentation](https://developer.android.com/reference/com/google/android/play/core/review/testing/FakeReviewManager).
+- To integrate `FakeReviewManager` in your plugin, pass `true` to the method `PerformInAppRateAsync`. This feature is exclusive to Android.
+
+### iOS
+- During development, submitting a review is not possible, but the review popup dialog will still show on your simulator or device.
+- :warning: The review dialogue **_will not be opened_** if the app is downloaded from TestFlight.
 
 ## API Usage
 Call the injected interface in any page or viewmodel to gain access to the APIs.
@@ -44,7 +57,7 @@ There are two main methods in the plugin: `PerformInAppRateAsync` and `PerformRa
 /// <summary>
 /// Perform rating without leaving the app.
 /// </summary>
-Task PerformInAppRateAsync();
+Task PerformInAppRateAsync(bool isTestOrDebugMode = false);
 ```
 > This method will open an in-app review dialogue, using the `packageName` declared on the `AndroidManifest` file.
 
@@ -159,7 +172,11 @@ public partial class MainPage : ContentPage
     {
         Dispatcher.Dispatch(async () =>
         {
+# if DEBUG
+            await _appRating.PerformInAppRateAsync(true);
+#else
             await _appRating.PerformInAppRateAsync();
+#endif
         });
 
         Preferences.Set("application_rated", true);
