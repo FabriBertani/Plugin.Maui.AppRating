@@ -1,23 +1,33 @@
-﻿using Windows.ApplicationModel.Core;
+﻿using Microsoft.UI.Dispatching;
 using Windows.Services.Store;
-using Windows.UI.Core;
 using Launcher = Windows.System.Launcher;
 
 namespace Plugin.Maui.AppRating;
 
 partial class AppRatingImplementation : IAppRating
 {
+    private TaskCompletionSource<bool>? _inAppRateTcs;
+
     /// <summary>
     /// Open an in-app review popup of your current application.
     /// </summary>
     /// <remarks>To use this method the <b>Target Version</b> must be 10.0.17763 or above.</remarks>
-    public async Task PerformInAppRateAsync(bool isTestOrDebugMode)
+    public Task PerformInAppRateAsync(bool isTestOrDebugMode)
     {
-        var dispatcher = CoreApplication.MainView?.CoreWindow?.Dispatcher;
+        _inAppRateTcs?.TrySetCanceled();
 
-        await dispatcher?.RunAsync(CoreDispatcherPriority.Normal, async () =>
+        _inAppRateTcs = new();
+
+        var dispatcher = DispatcherQueue.GetForCurrentThread()
+            ?? WindowStateManager.Default.GetActiveWindow()?.DispatcherQueue;
+
+        dispatcher?.TryEnqueue(DispatcherQueuePriority.Normal, async () =>
         {
             StoreContext storeContext = StoreContext.GetDefault();
+
+            var hwnd = GetWindowHandle();
+
+            WinRT.Interop.InitializeWithWindow.Initialize(storeContext, hwnd);
 
             var result = await storeContext.RequestRateAndReviewAppAsync();
 
@@ -36,7 +46,11 @@ partial class AppRatingImplementation : IAppRating
 
                     break;
             }
+
+            _inAppRateTcs.TrySetResult(result.Status == StoreRateAndReviewStatus.Succeeded);
         });
+
+        return _inAppRateTcs.Task;
     }
 
     /// <summary>
@@ -82,9 +96,9 @@ partial class AppRatingImplementation : IAppRating
         // In case something goes wrong, we throw an exception.
         try
         {
-            if (Application.Current != null)
+            if (Application.Current is not null)
             {
-                if (Application.Current.MainPage != null)
+                if (Application.Current.MainPage is not null)
                     await Application.Current.MainPage.DisplayAlert(title, message, "OK");
             }
         }
@@ -93,4 +107,6 @@ partial class AppRatingImplementation : IAppRating
             throw;
         }
     }
+
+    private static nint GetWindowHandle() => ((MauiWinUIWindow)Application.Current?.Windows[0].Handler.PlatformView!).WindowHandle;
 }

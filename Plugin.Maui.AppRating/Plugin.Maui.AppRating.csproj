@@ -42,7 +42,7 @@
     </ItemGroup>
 
     <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
-        <PackageReference Include="Xamarin.Google.Android.Play.Core" Version="1.10.3.9" />
+        <PackageReference Include="Xamarin.Google.Android.Play.Core" Version="1.10.3.11" />
     </ItemGroup>
 
     <ItemGroup>
