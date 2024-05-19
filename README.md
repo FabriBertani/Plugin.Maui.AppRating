@@ -41,7 +41,7 @@ builder.Services.AddSingleton<IAppRating>(AppRating.Default);
 - It's highly recommended to test this or any other store review plugin on a real device with Google Play installed instead of using an emulator.
 - Due to new regulations from Google, the review dialogue will not be displayed on manual distribution or debug mode (apparently), only on apps published and distributed via Google Play Store, however, it is recommended to release your app under "Internal distribution" or "Internal App Sharing" to effectively test the store review popup. [Read here for more information](https://developer.android.com/guide/playcore/in-app-review/test). Additionally, you can debug the error using `adb logcat`.
 - `FakeReviewManager` is a new feature released by Google, primarily designed for testing and unit testing purposes. It operates without a user interface (UI). For more information, visit the [official Android documentation](https://developer.android.com/reference/com/google/android/play/core/review/testing/FakeReviewManager).
-- To integrate `FakeReviewManager` in your plugin, pass `true` to the method `PerformInAppRateAsync`. This feature is exclusive to Android.
+- To integrate `FakeReviewManager` in your implementaion of this plugin, pass `true` to the method `PerformInAppRateAsync`. This feature is exclusive to Android.
 
 ### iOS
 - During development, submitting a review is not possible, but the review popup dialog will still show on your simulator or device.
