@@ -33,7 +33,7 @@ builder.Services.AddSingleton<IAppRating>(AppRating.Default);
 ### New Features
 - Added .Net8 support to all platforms.
 - Updated libraries.
-- Added `FakeReviewManager` to allow Android.
+- Added `FakeReviewManager` to Android.
 - Fixed Windows implementation.
 
 ## :warning: Considerations regarding new platform policies :warning:
@@ -41,7 +41,7 @@ builder.Services.AddSingleton<IAppRating>(AppRating.Default);
 - It's highly recommended to test this or any other store review plugin on a real device with Google Play installed instead of using an emulator.
 - Due to new regulations from Google, the review dialogue will not be displayed on manual distribution or debug mode (apparently), only on apps published and distributed via Google Play Store, however, it is recommended to release your app under "Internal distribution" or "Internal App Sharing" to effectively test the store review popup. [Read here for more information](https://developer.android.com/guide/playcore/in-app-review/test). Additionally, you can debug the error using `adb logcat`.
 - `FakeReviewManager` is a new feature released by Google, primarily designed for testing and unit testing purposes. It operates without a user interface (UI). For more information, visit the [official Android documentation](https://developer.android.com/reference/com/google/android/play/core/review/testing/FakeReviewManager).
-- To integrate `FakeReviewManager` in your implementaion of this plugin, pass `true` to the method `PerformInAppRateAsync`. This feature is exclusive to Android.
+- To integrate `FakeReviewManager` in your implementation of this plugin, pass `true` to the method `PerformInAppRateAsync`. This feature is exclusive to Android.
 
 ### iOS
 - During development, submitting a review is not possible, but the review popup dialog will still show on your simulator or device.
@@ -63,7 +63,7 @@ Task PerformInAppRateAsync(bool isTestOrDebugMode = false);
 
 ```csharp
 /// <summary>
-/// Perform rating on the current OS store app or open the store page on browser.
+/// Perform rating on the current OS store app or open the store page on the browser.
 /// </summary>
 Task PerformRatingOnStoreAsync();
 ```
@@ -89,13 +89,13 @@ Task PerformInAppRateAsync();
 
 ```csharp
 /// <summary>
-/// Perform rating on the current OS store app or open the store page on browser.
+/// Perform rating on the current OS store app or open the store page on the browser.
 /// </summary>
 Task PerformRatingOnStoreAsync();
 ```
 > This method will open the **App Store app** on the store page of your current application. Otherwise, it will try to open the store page on the browser.
 
-If the method fails. it will display an alert announcing the error.
+If the method fails, it will display an alert announcing the error.
 
 `applicationId` property is the **_StoreId_** of your application and it **must** be provided as a named argument to open the store page on the store app or browser.
 
@@ -115,7 +115,7 @@ Task PerformInAppRateAsync();
 
 ```csharp
 /// <summary>
-/// Perform rating on the current OS store app or open the store page on browser.
+/// Perform rating on the current OS store app or open the store page on the browser.
 /// </summary>
 Task PerformRatingOnStoreAsync();
 ```
@@ -210,10 +210,10 @@ public partial class MainPage : ContentPage
 ```
 
 ## Sample
-Take a look at the [AppRatingSample](https://github.com/FabriBertani/Plugin.Maui.AppRating/tree/main/samples/AppRatingSample) for fully detailed implementation of this plugin.
+Take a look at the [AppRatingSample](https://github.com/FabriBertani/Plugin.Maui.AppRating/tree/main/samples/AppRatingSample) for a fully detailed implementation of this plugin.
 
 ## Contributions
-Please, feel free to open an [Issue](https://github.com/FabriBertani/Plugin.Maui.AppRating/issues) if you found any bugs or submit a PR.
+Please, feel free to open an [Issue](https://github.com/FabriBertani/Plugin.Maui.AppRating/issues) if you find any bugs or submit a PR.
 
 ## License
 Plugin.Maui.AppRating is licensed under [MIT](https://github.com/FabriBertani/Plugin.Maui.AppRating/blob/main/LICENSE).
