@@ -25,39 +25,42 @@ namespace AppRatingSample
         {
             if (Preferences.Get("application_counter",0) >= 5)
             {
-                if (!await DisplayAlert("Rate this App!", "Are you enjoying the so far? Would you like to leave a review in the store?", "Yes", "No"))
+                await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
-                    Preferences.Set("application_counter", 0);
+                    if (!await DisplayAlert("Rate this App!", "Are you enjoying the so far? Would you like to leave a review in the store?", "Yes", "No"))
+                    {
+                        Preferences.Set("application_counter", 0);
 
-                    return;
-                }
+                        return;
+                    }
+                });
 
                 await RateApplicationInApp();
             }
         }
 
-        private Task RateApplicationInApp()
+        private async Task RateApplicationInApp()
         {
-            Dispatcher.Dispatch(async () =>
+            await MainThread.InvokeOnMainThreadAsync(async () =>
             {
+#if DEBUG
+                await _appRating.PerformInAppRateAsync(true);
+#else
                 await _appRating.PerformInAppRateAsync();
+#endif
             });
 
             Preferences.Set("application_rated", true);
-
-            return Task.CompletedTask;
         }
 
-        private Task RateApplicationOnStore()
+        private async Task RateApplicationOnStore()
         {
-            Dispatcher.Dispatch(async () =>
+            await MainThread.InvokeOnMainThreadAsync(async () =>
             {
                 await _appRating.PerformRatingOnStoreAsync(packageName: androidPackageName, applicationId: iOSApplicationId, productId: windowsProductId);
             });
 
             Preferences.Set("application_rated", true);
-
-            return Task.CompletedTask;
         }
 
         private void InAppRating_Clicked(object sender, EventArgs e)
