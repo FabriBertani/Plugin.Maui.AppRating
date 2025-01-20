@@ -5,20 +5,20 @@
     x:Class="AppRatingSample.MainPage">
     <ScrollView>
         <StackLayout
-            HorizontalOptions="FillAndExpand"
-            VerticalOptions="CenterAndExpand"
+            HorizontalOptions="Fill"
+            VerticalOptions="Center"
             Padding="16, 0">
             <Button
-                VerticalOptions="CenterAndExpand"
-                HorizontalOptions="FillAndExpand"
+                VerticalOptions="Center"
+                HorizontalOptions="Fill"
                 Margin="16"
                 BackgroundColor="Blue"
                 TextColor="White"
                 Text="OPEN IN APP RATING"
                 Clicked="InAppRating_Clicked" />
             <Button
-                VerticalOptions="CenterAndExpand"
-                HorizontalOptions="FillAndExpand"
+                VerticalOptions="Center"
+                HorizontalOptions="Fill"
                 Margin="16"
                 BackgroundColor="CornflowerBlue"
                 TextColor="White"
