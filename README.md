@@ -10,7 +10,7 @@
 |.Net MAUI Android|API 21+|
 |.Net MAUI iOS|iOS 12.2+|
 |Windows|10.0.17763+|
-|Mac Catalyst|14.0+|
+|Mac Catalyst|15.0+|
 
 ## Installation
 `Plugin.Maui.AppRating` is available via NuGet, grab the latest package and install it in your solution:
