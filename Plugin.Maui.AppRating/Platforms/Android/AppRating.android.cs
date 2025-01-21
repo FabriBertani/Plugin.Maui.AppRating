@@ -4,12 +4,10 @@ using Android.Content.PM;
 using Android.OS;
 using Xamarin.Google.Android.Play.Core.Review;
 using Xamarin.Google.Android.Play.Core.Review.Testing;
-using Xamarin.Google.Android.Play.Core.Tasks;
-using Task = System.Threading.Tasks.Task;
 
 namespace Plugin.Maui.AppRating;
 
-partial class AppRatingImplementation : Java.Lang.Object, IAppRating, IOnCompleteListener
+partial class AppRatingImplementation : Java.Lang.Object, IAppRating, Android.Gms.Tasks.IOnCompleteListener
 {
     private static volatile Handler? _handler;
 
@@ -17,7 +15,7 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, IOnComplet
 
     private IReviewManager? _reviewManager;
 
-    private Xamarin.Google.Android.Play.Core.Tasks.Task? _launchTask;
+    private Android.Gms.Tasks.Task? _launchTask;
 
     private bool _forceReturn;
 
@@ -116,7 +114,7 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, IOnComplet
         return tcs.Task;
     }
 
-    public void OnComplete(Xamarin.Google.Android.Play.Core.Tasks.Task task)
+    public void OnComplete(Android.Gms.Tasks.Task task)
     {
         if (!task.IsSuccessful || _forceReturn)
         {
