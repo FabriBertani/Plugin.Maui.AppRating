@@ -8,7 +8,7 @@
 |Platform|Version|
 |-------------------|:------------------:|
 |.Net MAUI Android|API 21+|
-|.Net MAUI iOS|iOS 11.0+|
+|.Net MAUI iOS|iOS 12.2+|
 |Windows|10.0.17763+|
 |Mac Catalyst|14.0+|
 
@@ -29,12 +29,11 @@ Finally, add the default instance of the plugin as a singleton to inject it in y
 builder.Services.AddSingleton<IAppRating>(AppRating.Default);
 ```
 
-## Version 1.2.0
+## Version 1.2.1
 ### New Features
-- Added .Net8 support to all platforms.
-- Updated libraries.
-- Added `FakeReviewManager` to Android.
-- Fixed Windows implementation.
+- Removed .Net7 support.
+- Added .Net9 support to all platforms.
+- Replaced the old `Xamarin.Google.Android.Play.Core` package with the modern `Xamarin.Google.Android.Play.Review.Ktx` package that also supports .Net9, on Android.
 
 ## :warning: Considerations regarding new platform policies :warning:
 ### Android
