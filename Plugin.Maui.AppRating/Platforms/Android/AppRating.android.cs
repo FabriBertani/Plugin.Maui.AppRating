@@ -1,5 +1,4 @@
-﻿using Android.App;
-using Android.Content;
+﻿using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using Xamarin.Google.Android.Play.Core.Review;
@@ -7,9 +6,13 @@ using Xamarin.Google.Android.Play.Core.Review.Testing;
 
 namespace Plugin.Maui.AppRating;
 
-partial class AppRatingImplementation : Java.Lang.Object, IAppRating, Android.Gms.Tasks.IOnCompleteListener
+internal partial class AppRatingImplementation : Java.Lang.Object, IAppRating, Android.Gms.Tasks.IOnCompleteListener
 {
-    private static volatile Handler? _handler;
+#if NET9_0_OR_GREATER
+    private readonly Lock _rateLock = new();
+#else
+    private readonly object _rateLock = new();
+#endif
 
     private TaskCompletionSource<bool>? _inAppRateTcs;
 
@@ -20,13 +23,28 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, Android.Gm
     private bool _forceReturn;
 
     /// <summary>
+    /// If set to true, exceptions will be thrown when an error occurs.
+    /// </summary>
+    public bool ThrowErrors { get; set; }
+
+    /// <summary>
     /// Open Android in-app review popup of your current application.
     /// </summary>
     public async Task PerformInAppRateAsync(bool isTestOrDebugMode = false)
     {
-        _inAppRateTcs?.TrySetCanceled();
+#if NET9_0_OR_GREATER
+        lock (_rateLock)
+#else
+        lock (_rateLock)
+#endif
+        {
+            if (_inAppRateTcs is not null && !_inAppRateTcs.Task.IsCompleted)
+                throw new Exception("In-app rating flow is already in progress.");
 
-        _inAppRateTcs = new();
+            _inAppRateTcs?.TrySetCanceled();
+
+            _inAppRateTcs = new();
+        }
 
         _reviewManager = isTestOrDebugMode
             ? new FakeReviewManager(Android.App.Application.Context)
@@ -38,11 +56,18 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, Android.Gm
 
         request.AddOnCompleteListener(this);
 
-        await _inAppRateTcs.Task;
+        try
+        {
+            await _inAppRateTcs.Task;
+        }
+        finally
+        {
+            _reviewManager?.Dispose();
 
-        _reviewManager.Dispose();
+            request?.Dispose();
 
-        request.Dispose();
+            _launchTask?.Dispose();
+        }
     }
 
     /// <summary>
@@ -63,8 +88,6 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, Android.Gm
     /// <param name="productId">Use <b>productId</b> for Windows.</param>
     public Task PerformRatingOnStoreAsync(string packageName = "", string applicationId = "", string productId = "")
     {
-        TaskCompletionSource<bool> tcs = new();
-
         if (!string.IsNullOrEmpty(packageName))
         {
             var context = Platform.AppContext;
@@ -83,16 +106,22 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, Android.Gm
 
                 context.StartActivity(intent);
 
-                tcs.SetResult(true);
+                return Task.CompletedTask;
             }
-            catch (PackageManager.NameNotFoundException)
+            catch (PackageManager.NameNotFoundException nameNotFoundEx)
             {
-                ShowAlertMessage("Error", "Cannot open rating because Google Play is not installed.");
+                System.Diagnostics.Debug.WriteLine("ERROR: Cannot open rating because Google Play is not installed.");
 
-                tcs.SetResult(false);
+                if (ThrowErrors)
+                    throw;
+
+                System.Diagnostics.Debug.WriteLine($"Error message: {nameNotFoundEx.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stacktrace: {nameNotFoundEx}");
             }
             catch (ActivityNotFoundException)
             {
+                System.Diagnostics.Debug.WriteLine("INFO: Google Play fails to load");
+
                 // If Google Play fails to load, open the App link on the browser.
                 var playStoreUrl = $"https://play.google.com/store/apps/details?id={packageName}";
 
@@ -101,72 +130,65 @@ partial class AppRatingImplementation : Java.Lang.Object, IAppRating, Android.Gm
 
                 context.StartActivity(browserIntent);
 
-                tcs.SetResult(true);
+                return Task.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("ERROR: Unexpected error when opening rating.");
+
+                if (ThrowErrors)
+                    throw;
+
+                System.Diagnostics.Debug.WriteLine($"Error message: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stacktrace: {ex}");
             }
         }
         else
         {
-            ShowAlertMessage("Error", "Please, provide the application PackageName for Google Play Store.");
-
-            tcs.SetResult(false);
+            System.Diagnostics.Debug.WriteLine("ERROR: Please, provide the application PackageName for Google Play Store.");
         }
 
-        return tcs.Task;
+        return Task.CompletedTask;
     }
 
     public void OnComplete(Android.Gms.Tasks.Task task)
     {
-        if (!task.IsSuccessful || _forceReturn)
+#if NET9_0_OR_GREATER
+        lock (_rateLock)
+#else
+        lock (_rateLock)
+#endif
         {
-            _inAppRateTcs?.TrySetResult(_forceReturn);
+            if (!task.IsSuccessful || _forceReturn)
+            {
+                _inAppRateTcs?.TrySetResult(_forceReturn);
 
-            _launchTask?.Dispose();
+                _launchTask?.Dispose();
 
-            return;
+                return;
+            }
+
+            try
+            {
+                ReviewInfo reviewInfo = (ReviewInfo)task.GetResult(Java.Lang.Class.FromType(typeof(ReviewInfo)));
+
+                _forceReturn = true;
+
+                _launchTask = _reviewManager?.LaunchReviewFlow(Platform.CurrentActivity, reviewInfo);
+
+                _launchTask?.AddOnCompleteListener(this);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("ERROR: There was an error launching in-app review. Please try again.");
+
+                if (ThrowErrors)
+                    throw;
+
+                System.Diagnostics.Debug.WriteLine($"Error message: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stacktrace: {ex}");
+                _inAppRateTcs?.TrySetResult(false);
+            }
         }
-
-        try
-        {
-            ReviewInfo reviewInfo = (ReviewInfo)task.GetResult(Java.Lang.Class.FromType(typeof(ReviewInfo)));
-
-            _forceReturn = true;
-
-            _launchTask = _reviewManager?.LaunchReviewFlow(Platform.CurrentActivity, reviewInfo);
-
-            _launchTask?.AddOnCompleteListener(this);
-        }
-        catch (Exception ex)
-        {
-            ShowAlertMessage("Error", "There was an error launching in-app review. Please try again.");
-
-            _inAppRateTcs?.TrySetResult(false);
-
-            System.Diagnostics.Debug.WriteLine($"Error message: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"Stacktrace: {ex}");
-        }
-    }
-
-    private static void ShowAlertMessage(string title, string message)
-    {
-        if (_handler?.Looper != Looper.MainLooper)
-            _handler = new Handler(Looper.MainLooper!);
-
-        _handler?.Post(() =>
-        {
-            var dialog = new AlertDialog.Builder(Platform.CurrentActivity);
-            dialog.SetTitle(title);
-            dialog.SetMessage(message);
-
-            dialog.SetPositiveButton("OK", (s, e) => { });
-
-            var alert = dialog.Create();
-
-            if (Build.VERSION.SdkInt < BuildVersionCodes.M)
-                alert?.Window?.SetType(Android.Views.WindowManagerTypes.SystemAlert);
-
-            alert?.Show();
-        });
-
-        _handler?.Dispose();
     }
 }

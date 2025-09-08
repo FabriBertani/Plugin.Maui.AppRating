@@ -6,51 +6,72 @@ namespace Plugin.Maui.AppRating;
 
 partial class AppRatingImplementation : IAppRating
 {
-    private TaskCompletionSource<bool>? _inAppRateTcs;
+    /// <summary>
+    /// If set to true, exceptions will be thrown when an error occurs.
+    /// </summary>
+    public bool ThrowErrors { get;  set; }
 
     /// <summary>
     /// Open an in-app review popup of your current application.
     /// </summary>
     /// <remarks>To use this method the <b>Target Version</b> must be 10.0.17763 or above.</remarks>
-    public Task PerformInAppRateAsync(bool isTestOrDebugMode)
+    public async Task PerformInAppRateAsync(bool isTestOrDebugMode)
     {
-        _inAppRateTcs?.TrySetCanceled();
-
-        _inAppRateTcs = new();
-
         var dispatcher = DispatcherQueue.GetForCurrentThread()
             ?? WindowStateManager.Default.GetActiveWindow()?.DispatcherQueue;
 
-        dispatcher?.TryEnqueue(DispatcherQueuePriority.Normal, async () =>
+        if (dispatcher is null)
         {
-            StoreContext storeContext = StoreContext.GetDefault();
+            System.Diagnostics.Debug.WriteLine("ERROR: DispatcherQueue is not available.");
 
-            var hwnd = GetWindowHandle();
+            return;
+        }
 
-            WinRT.Interop.InitializeWithWindow.Initialize(storeContext, hwnd);
+        var tcs = new TaskCompletionSource<bool>();
 
-            var result = await storeContext.RequestRateAndReviewAppAsync();
-
-            switch (result.Status)
+        dispatcher.TryEnqueue(DispatcherQueuePriority.Normal, async () =>
+        {
+            try
             {
-                case StoreRateAndReviewStatus.Error:
-                    await ShowErrorMessage("ERROR", "There was an error trying to opening in-app rating.");
+                StoreContext storeContext = StoreContext.GetDefault();
 
-                    break;
-                case StoreRateAndReviewStatus.CanceledByUser:
-                    await ShowErrorMessage("ACTION CANCELED", "In-app rating action canceled by user.");
+                var hwnd = GetWindowHandle();
 
-                    break;
-                case StoreRateAndReviewStatus.NetworkError:
-                    await ShowErrorMessage("ERROR", "Please check your internet connection first.");
+                WinRT.Interop.InitializeWithWindow.Initialize(storeContext, hwnd);
 
-                    break;
+                var result = await storeContext.RequestRateAndReviewAppAsync();
+
+                switch (result.Status)
+                {
+                    case StoreRateAndReviewStatus.Error:
+                        System.Diagnostics.Debug.WriteLine("ERROR: There was an error trying to opening in-app rating.");
+
+                        break;
+                    case StoreRateAndReviewStatus.CanceledByUser:
+                        System.Diagnostics.Debug.WriteLine("ACTION CANCELED: In-app rating action canceled by user.");
+
+                        break;
+                    case StoreRateAndReviewStatus.NetworkError:
+                        System.Diagnostics.Debug.WriteLine("NETWORK ERROR: Please check your internet connection first.");
+
+                        break;
+                }
+
+                tcs.SetResult(result.Status == StoreRateAndReviewStatus.Succeeded);
             }
+            catch (Exception ex)
+            {
+                if (ThrowErrors)
+                    throw;
 
-            _inAppRateTcs.TrySetResult(result.Status == StoreRateAndReviewStatus.Succeeded);
+                System.Diagnostics.Debug.WriteLine($"Error message: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stacktrace: {ex}");
+
+                tcs.SetResult(false);
+            }
         });
 
-        return _inAppRateTcs.Task;
+        await tcs.Task;
     }
 
     /// <summary>
@@ -73,38 +94,24 @@ partial class AppRatingImplementation : IAppRating
     {
         if (string.IsNullOrEmpty(productId))
         {
-            await ShowErrorMessage("ERROR", "Please, provide the application ProductId for Microsoft Store.");
+            System.Diagnostics.Debug.WriteLine("ERROR: Please, provide the application ProductId for Microsoft Store.");
 
             return;
-        }            
-            
+        }
+
         try
         {
             await Launcher.LaunchUriAsync(new Uri($"ms-windows-store://review/?ProductId={productId}"));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            await ShowErrorMessage("ERROR", "Cannot open rating because Microsoft Store was unable to launch.");
-        }
-    }
+            System.Diagnostics.Debug.WriteLine("ERROR: Cannot open rating because Microsoft Store was unable to launch.");
 
-    private static async Task ShowErrorMessage(string title, string message)
-    {
-        // To create a native dialog there is an issue with the XamlRoot on WinUI,
-        // so we have to call the MainPage of the MAUI application and use the
-        // DisplayAlert method.
-        // In case something goes wrong, we throw an exception.
-        try
-        {
-            if (Application.Current is not null)
-            {
-                if (Application.Current.MainPage is not null)
-                    await Application.Current.MainPage.DisplayAlert(title, message, "OK");
-            }
-        }
-        catch (Exception)
-        {
-            throw;
+            if (ThrowErrors)
+                throw;
+
+            System.Diagnostics.Debug.WriteLine($"Error message: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Stacktrace: {ex}");
         }
     }
 

@@ -7,33 +7,30 @@ namespace Plugin.Maui.AppRating;
 partial class AppRatingImplementation : IAppRating
 {
     /// <summary>
+    /// If set to true, exceptions will be thrown when an error occurs.
+    /// </summary>
+    public bool ThrowErrors { get; set; }
+
+    /// <summary>
     /// Open in-app review popup of your current application.
     /// </summary>
     public Task PerformInAppRateAsync(bool isTestOrDebugMode)
     {
-        var tcs = new TaskCompletionSource<bool>();
-
-        if (UIDevice.CurrentDevice.CheckSystemVersion(14, 0))
-        {
-            if (UIApplication.SharedApplication?.ConnectedScenes?
-                .ToArray<UIScene>()?
-                .FirstOrDefault(ws => ws.ActivationState == UISceneActivationState.ForegroundActive) is UIWindowScene windowScene)
-            {
-                SKStoreReviewController.RequestReview(windowScene);
-
-                tcs.SetResult(true);
-
-                return tcs.Task;
-            }
-        }
+        if (UIDevice.CurrentDevice.CheckSystemVersion(16, 0))
+            return MainThread.InvokeOnMainThreadAsync(PerformInAppRateOnMacCatalyst16AndAboveAsync);
+        else if (UIDevice.CurrentDevice.CheckSystemVersion(14, 0))
+            return MainThread.InvokeOnMainThreadAsync(PerformInAppRateOnMacCatalyst14AndAboveAsync);
         else
         {
-            DisplayErrorAlert("Your current Mac Catalyst version doesn't support in-app rating.");
+            var errorMessage = "ERROR: Your current Mac Catalyst version doesn't support in-app rating.";
 
-            tcs.SetResult(false);
+            System.Diagnostics.Debug.WriteLine(errorMessage);
+
+            if (ThrowErrors)
+                throw new NotSupportedException(errorMessage);
+
+            return Task.CompletedTask;
         }
-
-        return tcs.Task;
     }
 
     /// <summary>
@@ -41,9 +38,9 @@ partial class AppRatingImplementation : IAppRating
     /// </summary>
     /// <param name="appId">Identifier of the application, use <b>packageName</b> for Android,
     /// <b>applicationId</b> for iOS and/or <b>productId</b> for Windows</param>
-    public Task PerformRatingOnStoreAsync(string appId)
+    public async Task PerformRatingOnStoreAsync(string appId)
     {
-        return PerformRatingOnStoreAsync(applicationId: appId);
+        await PerformRatingOnStoreAsync(applicationId: appId);
     }
 
     /// <summary>
@@ -52,59 +49,71 @@ partial class AppRatingImplementation : IAppRating
     /// <param name="packageName">Use <b>packageName</b> for Android</param>
     /// <param name="applicationId">Use <b>applicationId</b> for iOS/MacCatalyst</param>
     /// <param name="productId">Use <b>productId</b> for Windows.</param>
-    public Task PerformRatingOnStoreAsync(string packageName = "", string applicationId = "", string productId = "")
+    public async Task PerformRatingOnStoreAsync(string packageName = "", string applicationId = "", string productId = "")
     {
-        var tcs = new  TaskCompletionSource<bool>();
-
-        if (string.IsNullOrEmpty(applicationId))
+        if (string.IsNullOrWhiteSpace(applicationId))
         {
-            DisplayErrorAlert("Please provide the ApplicationId for Apple App Store.");
+            var errorMessage = "ERROR: Please provide the ApplicationId for Apple App Store.";
 
-            tcs.SetResult(false);
+            System.Diagnostics.Debug.WriteLine(errorMessage);
 
-            return tcs.Task;
+            if (ThrowErrors)
+                throw new ArgumentException(errorMessage, nameof(applicationId));
+
+            return;
         }
 
-        var url = $"itms-apps://itunes.apple.com/app/id{applicationId}?action=write-review";
-
-        var nativeUrl = new NSUrl(url);
+        var url = GetAppStoreReviewUrl(applicationId);
 
         try
         {
-            UIApplication.SharedApplication.OpenUrlAsync(nativeUrl, new UIApplicationOpenUrlOptions());
-
-            tcs.SetResult(true);
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                await UIApplication.SharedApplication.OpenUrlAsync(url, new UIApplicationOpenUrlOptions());
+            });
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            DisplayErrorAlert("Cannot open rating because App Store was unable to launch.");
+            System.Diagnostics.Debug.WriteLine("ERROR: Cannot open rating because App Store was unable to launch.");
 
-            tcs.SetResult(false);
+            if (ThrowErrors)
+                throw;
+
+            System.Diagnostics.Debug.WriteLine($"Error message: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Stacktrace: {ex}");
         }
-
-        return tcs.Task;
     }
 
-    private static void DisplayErrorAlert(string errorMessage)
+    private static Task PerformInAppRateOnMacCatalyst16AndAboveAsync()
     {
-        NSRunLoop.Main.InvokeOnMainThread(() =>
+#if NET9_0_OR_GREATER && MACCATALYST16_1_OR_GREATER
+        if (UIApplication.SharedApplication?.ConnectedScenes?
+            .OfType<UIScene>()?
+            .FirstOrDefault(ws => ws.ActivationState == UISceneActivationState.ForegroundActive) is UIWindowScene windowScene)
         {
-            var alert = UIAlertController.Create("Error",
-                                                 errorMessage,
-                                                 UIAlertControllerStyle.Alert);
+#pragma warning disable APL0004, CA1416
+            AppStore.RequestReview(windowScene);
+#pragma warning restore APL0004, CA1416
+        }
+#endif
 
-            var positiveAction = UIAlertAction.Create("OK",
-                                                      UIAlertActionStyle.Default,
-                                                      actionPositive => alert.DismissViewController(true, null));
+        return Task.CompletedTask;
+    }
 
-            alert.AddAction(positiveAction);
+    private static Task PerformInAppRateOnMacCatalyst14AndAboveAsync()
+    {
+        if (UIApplication.SharedApplication?.ConnectedScenes?
+            .OfType<UIScene>()?
+            .FirstOrDefault(ws => ws.ActivationState == UISceneActivationState.ForegroundActive) is UIWindowScene windowScene)
+        {
+            SKStoreReviewController.RequestReview(windowScene);
+        }
 
-            var window = UIApplication.SharedApplication.ConnectedScenes
-                .OfType<UIWindowScene>()
-                .SelectMany(s => s.Windows)
-                .FirstOrDefault(w => w.IsKeyWindow);
+        return Task.CompletedTask;
+    }
 
-            window?.RootViewController?.PresentViewController(alert, true, null);
-        });
+    private static NSUrl GetAppStoreReviewUrl(string applicationId)
+    {
+        return new NSUrl($"itms-apps://itunes.apple.com/app/id{applicationId}?action=write-review");
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Foundation;
 using StoreKit;
-using System.Runtime.Versioning;
 using UIKit;
 
 namespace Plugin.Maui.AppRating;
@@ -8,42 +7,30 @@ namespace Plugin.Maui.AppRating;
 partial class AppRatingImplementation : IAppRating
 {
     /// <summary>
+    /// If set to true, exceptions will be thrown when an error occurs.
+    /// </summary>
+    public bool ThrowErrors { get; set; }
+
+    /// <summary>
     /// Open in-app review popup of your current application.
     /// </summary>
     public Task PerformInAppRateAsync(bool isTestOrDebugMode)
     {
-        var tcs = new TaskCompletionSource<bool>();
-
-        if (UIDevice.CurrentDevice.CheckSystemVersion(10, 3))
-        {
-            if (UIDevice.CurrentDevice.CheckSystemVersion(14, 0))
-            {
-                if (UIApplication.SharedApplication?.ConnectedScenes?
-                    .ToArray<UIScene>()?
-                    .FirstOrDefault(ws => ws.ActivationState == UISceneActivationState.ForegroundActive) is UIWindowScene windowScene)
-                {
-                    SKStoreReviewController.RequestReview(windowScene);
-
-                    tcs.SetResult(true);
-
-                    return tcs.Task;
-                }
-            }
-
-#pragma warning disable CA1422
-            SKStoreReviewController.RequestReview();
-#pragma warning restore CA1422
-
-            tcs.SetResult(true);
-        }
+        if (UIDevice.CurrentDevice.CheckSystemVersion(16, 0))
+            return MainThread.InvokeOnMainThreadAsync(PerformInAppRateOniOS16AndAboveAsync);
+        else if (UIDevice.CurrentDevice.CheckSystemVersion(14, 0))
+            return MainThread.InvokeOnMainThreadAsync(PerformInAppRateOniOS14AndAboveAsync);
+        else if (UIDevice.CurrentDevice.CheckSystemVersion(10, 3))
+            return MainThread.InvokeOnMainThreadAsync(PerformInAppRateOniOS10AndAboveAsync);
         else
         {
-            DisplayErrorAlert("Your current iOS version doesn't support in-app rating.");
+            System.Diagnostics.Debug.WriteLine("ERROR: Your current iOS version doesn't support in-app rating.");
 
-            tcs.SetResult(false);
+            if (ThrowErrors)
+                throw new NotSupportedException("Your current iOS version doesn't support in-app rating.");
+
+            return Task.CompletedTask;
         }
-
-        return tcs.Task;
     }
 
     /// <summary>
@@ -51,9 +38,9 @@ partial class AppRatingImplementation : IAppRating
     /// </summary>
     /// <param name="appId">Identifier of the application, use <b>packageName</b> for Android,
     /// <b>applicationId</b> for iOS and/or <b>productId</b> for Windows</param>
-    public Task PerformRatingOnStoreAsync(string appId)
+    public async Task PerformRatingOnStoreAsync(string appId)
     {
-        return PerformRatingOnStoreAsync(applicationId: appId);
+        await PerformRatingOnStoreAsync(applicationId: appId);
     }
 
     /// <summary>
@@ -62,73 +49,82 @@ partial class AppRatingImplementation : IAppRating
     /// <param name="packageName">Use <b>packageName</b> for Android.</param>
     /// <param name="applicationId">Use <b>applicationId</b> for iOS.</param>
     /// <param name="productId">Use <b>productId</b> for Windows.</param>
-    public Task PerformRatingOnStoreAsync(string packageName = "", string applicationId = "", string productId = "")
+    public async Task PerformRatingOnStoreAsync(string packageName = "", string applicationId = "", string productId = "")
     {
-        var tcs = new TaskCompletionSource<bool>();
-
-        if (string.IsNullOrEmpty(applicationId))
+        if (string.IsNullOrWhiteSpace(applicationId))
         {
-            DisplayErrorAlert("Please provide the ApplicationId for Apple App Store");
+            var errorMessage = "ERROR: Please provide the ApplicationId for Apple App Store";
 
-            tcs.SetResult(false);
+            System.Diagnostics.Debug.WriteLine(errorMessage);
 
-            return tcs.Task;
+            if (ThrowErrors)
+                throw new ArgumentException(errorMessage, nameof(applicationId));
+
+            return;
         }
 
-        var url = new NSUrl($"itms-apps://itunes.apple.com/app/id{applicationId}?action=write-review");
+        var url = GetAppStoreReviewUrl(applicationId);
 
         try
         {
-            if (UIDevice.CurrentDevice.CheckSystemVersion(10, 0))
-                UIApplication.SharedApplication.OpenUrlAsync(url, new UIApplicationOpenUrlOptions());
-            else
-                UIApplication.SharedApplication.OpenUrl(url);
-
-            tcs.SetResult(true);
+            await MainThread.InvokeOnMainThreadAsync(async () =>
+            {
+                if (UIDevice.CurrentDevice.CheckSystemVersion(10, 0))
+                    await UIApplication.SharedApplication.OpenUrlAsync(url, new UIApplicationOpenUrlOptions());
+                else
+                    UIApplication.SharedApplication.OpenUrl(url);
+            });
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            DisplayErrorAlert("Cannot open rating because App Store was unable to launch.");
+            System.Diagnostics.Debug.WriteLine("ERROR: Cannot open rating because App Store was unable to launch.");
 
-            tcs.SetResult(false);
+            if (ThrowErrors)
+                throw;
+
+            System.Diagnostics.Debug.WriteLine($"Error message: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Stacktrace: {ex}");
         }
-
-        return tcs.Task;
     }
 
-    private static void DisplayErrorAlert(string errorMessage)
+
+    private static Task PerformInAppRateOniOS16AndAboveAsync()
     {
-        NSRunLoop.Main.InvokeOnMainThread(() =>
+#if NET9_0_OR_GREATER && IOS16_0_OR_GREATER
+        if (UIApplication.SharedApplication?.ConnectedScenes?
+                .OfType<UIScene>()?
+                .FirstOrDefault(ws => ws.ActivationState == UISceneActivationState.ForegroundActive) is UIWindowScene windowScene)
         {
-            var alert = UIAlertController.Create("Error",
-                                                 errorMessage,
-                                                 UIAlertControllerStyle.Alert);
+#pragma warning disable APL0004, CA1416
+            AppStore.RequestReview(windowScene);
+#pragma warning restore APL0004, CA1416
+        }
+#endif
 
-            var positiveAction = UIAlertAction.Create("OK",
-                                                      UIAlertActionStyle.Default,
-                                                      actonPositive => alert.DismissViewController(true, null));
-
-            alert.AddAction(positiveAction);
-
-            if (UIDevice.CurrentDevice.CheckSystemVersion(15, 0))
-            {
-                var window = UIApplication.SharedApplication.ConnectedScenes
-                    .OfType<UIWindowScene>()
-                    .SelectMany(s => s.Windows)
-                    .FirstOrDefault(w => w.IsKeyWindow);
-
-                window?.RootViewController?.PresentViewController(alert, true, null);
-            }
-            else if (UIDevice.CurrentDevice.CheckSystemVersion(14, 0))
-            {
-                var window = UIApplication.SharedApplication.Windows.FirstOrDefault(o => o.IsKeyWindow);
-
-                window?.RootViewController?.PresentViewController(alert, true, null);
-            }
-            else
-                UIApplication.SharedApplication.KeyWindow?.RootViewController?.PresentViewController(alert, true, null);
-        });
+        return Task.CompletedTask;
     }
+
+    private static Task PerformInAppRateOniOS14AndAboveAsync()
+    {
+        if (UIApplication.SharedApplication?.ConnectedScenes?
+            .OfType<UIScene>()?
+            .FirstOrDefault(ws => ws.ActivationState == UISceneActivationState.ForegroundActive) is UIWindowScene windowScene)
+        {
+            SKStoreReviewController.RequestReview(windowScene);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private static Task PerformInAppRateOniOS10AndAboveAsync()
+    {
+        SKStoreReviewController.RequestReview();
+
+        return Task.CompletedTask;
+    }
+
+    private static NSUrl GetAppStoreReviewUrl(string applicationId)
+        => new($"itms-apps://itunes.apple.com/app/id{applicationId}?action=write-review");
 
     internal static Version ParseVersion(string version)
     {
