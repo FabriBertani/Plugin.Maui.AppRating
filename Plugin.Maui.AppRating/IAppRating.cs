@@ -21,4 +21,9 @@ public interface IAppRating
     /// <param name="appId">Identifier of the application, use <b>packageName</b> for Android,
     /// <b>applicationId</b> for iOS and/or <b>productId</b> for Windows</param>
     Task PerformRatingOnStoreAsync(string appId);
+
+    /// <summary>
+    /// If set to true, exceptions will be thrown when an error occurs.
+    /// </summary>
+    bool ThrowErrors { set; }
 }

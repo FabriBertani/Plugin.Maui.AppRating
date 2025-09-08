@@ -1,8 +1,10 @@
 ﻿
 namespace Plugin.Maui.AppRating;
 
-partial class AppRatingImplementation : IAppRating
+internal partial class AppRatingImplementation : IAppRating
 {
+    public bool ThrowErrors { get; set; }
+
     public Task PerformInAppRateAsync(bool isTestOrDebugMode)
     {
         throw new NotImplementedException();

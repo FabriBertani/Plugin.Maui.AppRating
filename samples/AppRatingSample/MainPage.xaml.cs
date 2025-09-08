@@ -17,6 +17,8 @@ namespace AppRatingSample
 
             _appRating = appRating;
 
+            _appRating.ThrowErrors = true;
+
             if (!Preferences.Get("application_rated", false))
                 Task.Run(CheckAppCountAndRate);
         }
