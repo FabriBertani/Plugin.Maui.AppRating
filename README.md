@@ -1,5 +1,5 @@
 # Plugin.Maui.AppRating
-[![NuGet](https://img.shields.io/nuget/v/Plugin.Maui.AppRating.svg?label=NuGet)](https://www.nuget.org/packages/Plugin.Maui.AppRating/)
+[![NuGet](https://img.shields.io/nuget/v/Plugin.Maui.AppRating.svg?label=NuGet)](https://www.nuget.org/packages/Plugin.Maui.AppRating/) [![NuGet Downloads](https://img.shields.io/nuget/dt/Plugin.Maui.AppRating)](https://www.nuget.org/packages/Plugin.Maui.AppRating/#versions-body-tab) [![Buy Me a Coffee](https://img.shields.io/badge/support-buy%20me%20a%20coffee-FFDD00)](https://buymeacoffee.com/fabribertani)
 
 `Plugin.Maui.AppRating` gives developers a fast and easy way to ask users to rate the app on the stores.
 
@@ -8,7 +8,7 @@
 |Platform|Version|
 |-------------------|:------------------:|
 |.Net MAUI Android|API 21+|
-|.Net MAUI iOS|iOS 12.2+|
+|.Net MAUI iOS|iOS 14.2+|
 |Windows|10.0.17763+|
 |Mac Catalyst|15.0+|
 
@@ -29,11 +29,17 @@ Finally, add the default instance of the plugin as a singleton to inject it in y
 builder.Services.AddSingleton<IAppRating>(AppRating.Default);
 ```
 
-## Version 1.2.1
+## Version 1.2.2
 ### New Features
-- Removed .Net7 support.
-- Added .Net9 support to all platforms.
-- Replaced the old `Xamarin.Google.Android.Play.Core` package with the modern `Xamarin.Google.Android.Play.Review.Ktx` package that also supports .Net9, on Android.
+- Updated `Xamarin.Google.Android.Play.Review.Ktx` package for Android.
+- Updated iOS/MacCatalyst by the new `AppStore.RequestReview` from iOS and MacCatalyst version 16 and above.
+- Added `ThrowErrors` property to allow users to catch exceptions with the new error handling implementation.
+- Implemented improvements for error handling.
+- Removed old error alerts.
+- Applied code improvements to the library.
+- Update sample project.
+
+Click [here](https://github.com/FabriBertani/Plugin.Maui.AppRating/releases/tag/v1.2.2) to see the full Changelog!
 
 ## :warning: Considerations regarding new platform policies :warning:
 ### Android
@@ -68,7 +74,15 @@ Task PerformRatingOnStoreAsync();
 ```
 > This method will open the **_Google Play app_** on the store page of your current application. Otherwise, it will try to open the store page on the browser.
 
-If neither the store page nor the browser store page works, it will display an alert announcing the error.
+```csharp
+/// <summary>
+/// If set to true, exceptions will be thrown when an error occurs.
+/// </summary>
+bool ThrowErrors
+```
+> This will allow users to catch exceptions with the new error handling implementation.
+
+If neither the store page nor the browser store page works, it will display an error through the console and throw the exception if `ThrowErrors` is set to `true`.
 
 `packageName` **must** be provided as a named argument to open the store page on the store app or browser.
 
@@ -84,7 +98,7 @@ await _appRating.PerformRatingOnStoreAsync(packageName: "com.instagram.android")
 /// </summary>
 Task PerformInAppRateAsync();
 ```
-> if the device current OS version is _10.3+_ in **iOS**, or _14.0+_ in **Mac Catalyst**, this method will raise an in-app review popup of your current application, otherwise, it will display an alert announcing that it's not supported.
+> if the device current OS version is _10.3+_ in **iOS**, or _14.0+_ in **Mac Catalyst**, this method will raise an in-app review popup of your current application, otherwise, it will display a console log error announcing that it's not supported.
 
 ```csharp
 /// <summary>
@@ -94,7 +108,15 @@ Task PerformRatingOnStoreAsync();
 ```
 > This method will open the **App Store app** on the store page of your current application. Otherwise, it will try to open the store page on the browser.
 
-If the method fails, it will display an alert announcing the error.
+```csharp
+/// <summary>
+/// If set to true, exceptions will be thrown when an error occurs.
+/// </summary>
+bool ThrowErrors
+```
+> This will allow users to catch exceptions with the new error handling implementation.
+
+If the method fails, it will display an error through the console and throw the exception if `ThrowErrors` is set to `true`.
 
 `applicationId` property is the **_StoreId_** of your application and it **must** be provided as a named argument to open the store page on the store app or browser.
 
@@ -110,7 +132,7 @@ await _appRating.PerformRatingOnStoreAsync(applicationId: "id389801252");
 /// </summary>
 Task PerformInAppRateAsync();
 ```
-> This method will raise an in-app review dialog of your current application, otherwise, it will display an alert announcing that it's not supported.
+> This method will raise an in-app review dialog of your current application, otherwise, it will display a console log error announcing that it's not supported.
 
 ```csharp
 /// <summary>
@@ -120,7 +142,15 @@ Task PerformRatingOnStoreAsync();
 ```
 > This method will open the **_Microsoft Store application_** on the store page of your current application. Otherwise, it will try to open the store page on the browser.
 
-If this method fails, it will display an alert announcing the error.
+```csharp
+/// <summary>
+/// If set to true, exceptions will be thrown when an error occurs.
+/// </summary>
+bool ThrowErrors
+```
+> This will allow users to catch exceptions with the new error handling implementation.
+
+If this method fails, it will display an error through the console and throw the exception if `ThrowErrors` is set to `true`.
 
 `productId` property is the **ProductId** of your application and it **must** be provided as a named argument to open the store page on the store app or browser.
 
@@ -148,6 +178,9 @@ public partial class MainPage : ContentPage
 
         _appRating = appRating;
 
+        // Set to true if you want to catch exceptions.
+        _appRating.ThrowErrors = true;
+
         if (!Preferences.Get("application_rated", false))
             Task.Run(() => CheckAppCountAndRate());
     }
@@ -169,7 +202,7 @@ public partial class MainPage : ContentPage
 
     private Task RateApplicationInApp()
     {
-        Dispatcher.Dispatch(async () =>
+        await MainThread.InvokeOnMainThreadAsync(async () =>
         {
 # if DEBUG
             await _appRating.PerformInAppRateAsync(true);
@@ -185,9 +218,16 @@ public partial class MainPage : ContentPage
 
     private Task RateApplicationOnStore()
     {
-        Dispatcher.Dispatch(async () =>
+        await MainThread.InvokeOnMainThreadAsync(async () =>
         {
-            await _appRating.PerformRatingOnStoreAsync(packageName: androidPackageName, applicationId: iOSApplicationId, productId: windowsProductId);
+            try
+            {
+                await _appRating.PerformRatingOnStoreAsync(packageName: androidPackageName, applicationId: iOSApplicationId, productId: windowsProductId);
+            }
+            catch (Exception ex)
+            {
+                // Handle the exception here...
+            }
         });
 
         Preferences.Set("application_rated", true);

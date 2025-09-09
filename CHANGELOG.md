@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.2 (2025/09/09)
+[Full Changelog](https://github.com/FabriBertani/Plugin.Maui.AppRating/compare/v1.2.1...v1.2.2)
+
+**Implemented enhancements:**
+- Updated `Xamarin.Google.Android.Play.Review.Ktx` package for Android.
+- Updated iOS/MacCatalyst by the new `AppStore.RequestReview` from iOS and MacCatalyst version 16 and above.
+- Added `ThrowErrors` property to allow users to catch exceptions with the new error handling implementation.
+- Implemented improvements for error handling.
+- Removed old error alerts.
+- Applied code improvements to the library.
+- Update sample project.
+
+**Fixed bugs:**
+- Fixed [#16 (code question)](https://github.com/FabriBertani/Plugin.Maui.AppRating/issues/16).
+- Fixed [#17 (Dependency Conflicts with .NET MAUI 9.0.30 Due to AndroidX Version Constraints)](https://github.com/FabriBertani/Plugin.Maui.AppRating/issues/17).
+
 ## 1.2.1 (2025/01/21)
 [Full Changelog](https://github.com/FabriBertani/Plugin.Maui.AppRating/compare/v1.2.0...v1.2.1)
 

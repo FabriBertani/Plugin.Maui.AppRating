@@ -23,10 +23,10 @@
         <RepositoryUrl>https://github.com/FabriBertani/Plugin.Maui.AppRating</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>dotnet-maui;maui;toolkit;Plugin.Maui.AppRating;kit;AppRating;rating;android;ios;windows;maccatalyst;</PackageTags>
-        <AssemblyVersion>1.2.1</AssemblyVersion>
-        <FileVersion>1.2.1</FileVersion>
-        <Version>1.2.1</Version>
-        <PackageVersion>1.2.1</PackageVersion>
+        <AssemblyVersion>1.2.2</AssemblyVersion>
+        <FileVersion>1.2.2</FileVersion>
+        <Version>1.2.2</Version>
+        <PackageVersion>1.2.2</PackageVersion>
         <IncludeSymbols>True</IncludeSymbols>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
