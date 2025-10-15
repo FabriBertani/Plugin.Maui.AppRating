@@ -4,7 +4,7 @@ using Launcher = Windows.System.Launcher;
 
 namespace Plugin.Maui.AppRating;
 
-partial class AppRatingImplementation : IAppRating
+internal partial class AppRatingImplementation : IAppRating
 {
     /// <summary>
     /// If set to true, exceptions will be thrown when an error occurs.
@@ -22,7 +22,7 @@ partial class AppRatingImplementation : IAppRating
 
         if (dispatcher is null)
         {
-            System.Diagnostics.Debug.WriteLine("ERROR: DispatcherQueue is not available.");
+            System.Diagnostics.Trace.TraceWarning("DispatcherQueue is not available.");
 
             return;
         }
@@ -44,15 +44,15 @@ partial class AppRatingImplementation : IAppRating
                 switch (result.Status)
                 {
                     case StoreRateAndReviewStatus.Error:
-                        System.Diagnostics.Debug.WriteLine("ERROR: There was an error trying to opening in-app rating.");
+                        System.Diagnostics.Trace.TraceError("There was an error trying to opening in-app rating.");
 
                         break;
                     case StoreRateAndReviewStatus.CanceledByUser:
-                        System.Diagnostics.Debug.WriteLine("ACTION CANCELED: In-app rating action canceled by user.");
+                        System.Diagnostics.Trace.TraceInformation("ACTION CANCELED: In-app rating action canceled by user.");
 
                         break;
                     case StoreRateAndReviewStatus.NetworkError:
-                        System.Diagnostics.Debug.WriteLine("NETWORK ERROR: Please check your internet connection first.");
+                        System.Diagnostics.Trace.TraceError("Please check your internet connection first.");
 
                         break;
                 }
@@ -64,8 +64,8 @@ partial class AppRatingImplementation : IAppRating
                 if (ThrowErrors)
                     throw;
 
-                System.Diagnostics.Debug.WriteLine($"Error message: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stacktrace: {ex}");
+                System.Diagnostics.Trace.TraceError($"Error message: {ex.Message}");
+                System.Diagnostics.Trace.TraceError($"Stacktrace: {ex}");
 
                 tcs.SetResult(false);
             }
@@ -94,24 +94,32 @@ partial class AppRatingImplementation : IAppRating
     {
         if (string.IsNullOrEmpty(productId))
         {
-            System.Diagnostics.Debug.WriteLine("ERROR: Please, provide the application ProductId for Microsoft Store.");
+            System.Diagnostics.Trace.TraceWarning("Please, provide the application ProductId for Microsoft Store.");
 
             return;
         }
 
         try
         {
-            await Launcher.LaunchUriAsync(new Uri($"ms-windows-store://review/?ProductId={productId}"));
+            var success = await Launcher.LaunchUriAsync(new Uri($"ms-windows-store://review/?ProductId={productId}"));
+
+            if (!success)
+            {
+                System.Diagnostics.Trace.TraceError("Microsoft Store URL could not be opened. The system returned 'false'.");
+
+                if (ThrowErrors)
+                    throw new InvalidOperationException("Failed to open Microsoft Store URL. The system was unable to handle the request.");
+            }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine("ERROR: Cannot open rating because Microsoft Store was unable to launch.");
+            System.Diagnostics.Trace.TraceError("Cannot open rating because Microsoft Store was unable to launch.");
 
             if (ThrowErrors)
                 throw;
 
-            System.Diagnostics.Debug.WriteLine($"Error message: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"Stacktrace: {ex}");
+            System.Diagnostics.Trace.TraceError($"Error message: {ex.Message}");
+            System.Diagnostics.Trace.TraceError($"Stacktrace: {ex}");
         }
     }
 

@@ -4,7 +4,7 @@ using UIKit;
 
 namespace Plugin.Maui.AppRating;
 
-partial class AppRatingImplementation : IAppRating
+internal partial class AppRatingImplementation : IAppRating
 {
     /// <summary>
     /// If set to true, exceptions will be thrown when an error occurs.
@@ -24,7 +24,7 @@ partial class AppRatingImplementation : IAppRating
             return MainThread.InvokeOnMainThreadAsync(PerformInAppRateOniOS10AndAboveAsync);
         else
         {
-            System.Diagnostics.Debug.WriteLine("ERROR: Your current iOS version doesn't support in-app rating.");
+            System.Diagnostics.Trace.TraceError("Your current iOS version doesn't support in-app rating.");
 
             if (ThrowErrors)
                 throw new NotSupportedException("Your current iOS version doesn't support in-app rating.");
@@ -53,9 +53,9 @@ partial class AppRatingImplementation : IAppRating
     {
         if (string.IsNullOrWhiteSpace(applicationId))
         {
-            var errorMessage = "ERROR: Please provide the ApplicationId for Apple App Store";
+            var errorMessage = "Please provide the ApplicationId for Apple App Store";
 
-            System.Diagnostics.Debug.WriteLine(errorMessage);
+            System.Diagnostics.Trace.TraceError(errorMessage);
 
             if (ThrowErrors)
                 throw new ArgumentException(errorMessage, nameof(applicationId));
@@ -67,23 +67,31 @@ partial class AppRatingImplementation : IAppRating
 
         try
         {
-            await MainThread.InvokeOnMainThreadAsync(async () =>
+            var success = await MainThread.InvokeOnMainThreadAsync(async () =>
             {
                 if (UIDevice.CurrentDevice.CheckSystemVersion(10, 0))
-                    await UIApplication.SharedApplication.OpenUrlAsync(url, new UIApplicationOpenUrlOptions());
+                    return await UIApplication.SharedApplication.OpenUrlAsync(url, new UIApplicationOpenUrlOptions());
                 else
-                    UIApplication.SharedApplication.OpenUrl(url);
+                    return UIApplication.SharedApplication.OpenUrl(url);
             });
+
+            if (!success)
+            {
+                System.Diagnostics.Trace.TraceError("The App Store URL could not be opened. The system returned 'false'.");
+
+                if (ThrowErrors)
+                    throw new InvalidOperationException("Failed to open App Store URL. The system was unable to handle the request.");
+            }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine("ERROR: Cannot open rating because App Store was unable to launch.");
+            System.Diagnostics.Trace.TraceError("Cannot open rating because App Store was unable to launch.");
 
             if (ThrowErrors)
                 throw;
 
-            System.Diagnostics.Debug.WriteLine($"Error message: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"Stacktrace: {ex}");
+            System.Diagnostics.Trace.TraceError($"Error message: {ex.Message}");
+            System.Diagnostics.Trace.TraceError($"Stacktrace: {ex}");
         }
     }
 
