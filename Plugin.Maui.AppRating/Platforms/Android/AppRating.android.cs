@@ -110,17 +110,17 @@ internal partial class AppRatingImplementation : Java.Lang.Object, IAppRating, A
             }
             catch (PackageManager.NameNotFoundException nameNotFoundEx)
             {
-                System.Diagnostics.Debug.WriteLine("ERROR: Cannot open rating because Google Play is not installed.");
+                System.Diagnostics.Trace.TraceError("Cannot open rating because Google Play is not installed.");
 
                 if (ThrowErrors)
                     throw;
 
-                System.Diagnostics.Debug.WriteLine($"Error message: {nameNotFoundEx.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stacktrace: {nameNotFoundEx}");
+                System.Diagnostics.Trace.TraceError($"Error message: {nameNotFoundEx.Message}");
+                System.Diagnostics.Trace.TraceError($"Stacktrace: {nameNotFoundEx}");
             }
             catch (ActivityNotFoundException)
             {
-                System.Diagnostics.Debug.WriteLine("INFO: Google Play fails to load");
+                System.Diagnostics.Trace.TraceInformation("Google Play fails to load");
 
                 // If Google Play fails to load, open the App link on the browser.
                 var playStoreUrl = $"https://play.google.com/store/apps/details?id={packageName}";
@@ -134,18 +134,18 @@ internal partial class AppRatingImplementation : Java.Lang.Object, IAppRating, A
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("ERROR: Unexpected error when opening rating.");
+                System.Diagnostics.Trace.TraceError("Unexpected error when opening rating.");
 
                 if (ThrowErrors)
                     throw;
 
-                System.Diagnostics.Debug.WriteLine($"Error message: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stacktrace: {ex}");
+                System.Diagnostics.Trace.TraceError($"Error message: {ex.Message}");
+                System.Diagnostics.Trace.TraceError($"Stacktrace: {ex}");
             }
         }
         else
         {
-            System.Diagnostics.Debug.WriteLine("ERROR: Please, provide the application PackageName for Google Play Store.");
+            System.Diagnostics.Trace.TraceWarning("Please, provide the application PackageName for Google Play Store.");
         }
 
         return Task.CompletedTask;
@@ -180,13 +180,13 @@ internal partial class AppRatingImplementation : Java.Lang.Object, IAppRating, A
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine("ERROR: There was an error launching in-app review. Please try again.");
+                System.Diagnostics.Trace.TraceError("There was an error launching in-app review. Please try again.");
 
                 if (ThrowErrors)
                     throw;
 
-                System.Diagnostics.Debug.WriteLine($"Error message: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stacktrace: {ex}");
+                System.Diagnostics.Trace.TraceError($"Error message: {ex.Message}");
+                System.Diagnostics.Trace.TraceError($"Stacktrace: {ex}");
                 _inAppRateTcs?.TrySetResult(false);
             }
         }

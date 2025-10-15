@@ -59,7 +59,14 @@ namespace AppRatingSample
         {
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
-                await _appRating.PerformRatingOnStoreAsync(packageName: androidPackageName, applicationId: iOSApplicationId, productId: windowsProductId);
+                try
+                {
+                    await _appRating.PerformRatingOnStoreAsync(packageName: androidPackageName, applicationId: iOSApplicationId, productId: windowsProductId);
+                }
+                catch (Exception ex)
+                {
+                    // Handle exception here...
+                }
             });
 
             Preferences.Set("application_rated", true);
