@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.3 (2025/10/16)
+[Full Changelog](https://github.com/FabriBertani/Plugin.Maui.AppRating/compare/v1.2.2...v1.2.3)
+
+**Implemented enhancements:**
+- Improved logging by implementing `System.Diagnostics.Trace`.
+- Added better error handling and logging.
+- Updated sample project.
+
 ## 1.2.2 (2025/09/09)
 [Full Changelog](https://github.com/FabriBertani/Plugin.Maui.AppRating/compare/v1.2.1...v1.2.2)
 
