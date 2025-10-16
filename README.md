@@ -1,3 +1,5 @@
+![](https://raw.githubusercontent.com/FabriBertani/Plugin.Maui.AppRating/main/Assets/plugin.maui.apprating_128x128.png)
+
 # Plugin.Maui.AppRating
 [![NuGet](https://img.shields.io/nuget/v/Plugin.Maui.AppRating.svg?label=NuGet)](https://www.nuget.org/packages/Plugin.Maui.AppRating/) [![NuGet Downloads](https://img.shields.io/nuget/dt/Plugin.Maui.AppRating)](https://www.nuget.org/packages/Plugin.Maui.AppRating/#versions-body-tab) [![Buy Me a Coffee](https://img.shields.io/badge/support-buy%20me%20a%20coffee-FFDD00)](https://buymeacoffee.com/fabribertani)
 
@@ -5,17 +7,19 @@
 
 ## Platforms supported
 
-|Platform|Version|
-|-------------------|:------------------:|
-|.Net MAUI Android|API 21+|
-|.Net MAUI iOS|iOS 14.2+|
-|Windows|10.0.17763+|
-|Mac Catalyst|15.0+|
+|     Platform      |   Version   |
+|-------------------|:-----------:|
+| .Net MAUI Android | API 21+     |
+| .Net MAUI iOS.    | iOS 14.2+   |
+| Mac Catalyst      | 15.0+       |
+| Windows           | 10.0.17763+ |
 
 ## Installation
 `Plugin.Maui.AppRating` is available via NuGet, grab the latest package and install it in your solution:
 
-    Install-Package Plugin.Maui.AppRating
+```bash
+dotnet add package Plugin.Maui.AppRating --version 1.2.3
+```
 
 In your `MauiProgram` class add the following using statement:
 
@@ -29,17 +33,13 @@ Finally, add the default instance of the plugin as a singleton to inject it in y
 builder.Services.AddSingleton<IAppRating>(AppRating.Default);
 ```
 
-## Version 1.2.2
+## Version 1.2.3
 ### New Features
-- Updated `Xamarin.Google.Android.Play.Review.Ktx` package for Android.
-- Updated iOS/MacCatalyst by the new `AppStore.RequestReview` from iOS and MacCatalyst version 16 and above.
-- Added `ThrowErrors` property to allow users to catch exceptions with the new error handling implementation.
-- Implemented improvements for error handling.
-- Removed old error alerts.
-- Applied code improvements to the library.
-- Update sample project.
+- Improved logging by implementing `System.Diagnostics.Trace`.
+- Added better error handling and logging.
+- Updated sample project.
 
-Click [here](https://github.com/FabriBertani/Plugin.Maui.AppRating/releases/tag/v1.2.2) to see the full Changelog!
+Click [here](https://github.com/FabriBertani/Plugin.Maui.AppRating/releases/tag/v1.2.3) to see the full Changelog!
 
 ## :warning: Considerations regarding new platform policies :warning:
 ### Android
@@ -252,7 +252,7 @@ public partial class MainPage : ContentPage
 Take a look at the [AppRatingSample](https://github.com/FabriBertani/Plugin.Maui.AppRating/tree/main/samples/AppRatingSample) for a fully detailed implementation of this plugin.
 
 ## Contributions
-Please, feel free to open an [Issue](https://github.com/FabriBertani/Plugin.Maui.AppRating/issues) if you find any bugs or submit a PR.
+Feel free to open an [Issue](https://github.com/FabriBertani/Plugin.Maui.AppRating/issues) if you encounter any bugs or submit a PR to contribute improvements or fixes. Your contributions are greatly appreaciated.
 
 ## License
 Plugin.Maui.AppRating is licensed under [MIT](https://github.com/FabriBertani/Plugin.Maui.AppRating/blob/main/LICENSE).
