@@ -94,7 +94,7 @@ internal partial class AppRatingImplementation : IAppRating
 
     private static Task PerformInAppRateOnMacCatalyst16AndAboveAsync()
     {
-#if NET9_0_OR_GREATER && MACCATALYST16_1_OR_GREATER
+#if MACCATALYST16_1_OR_GREATER
         if (UIApplication.SharedApplication?.ConnectedScenes?
             .OfType<UIScene>()?
             .FirstOrDefault(ws => ws.ActivationState == UISceneActivationState.ForegroundActive) is UIWindowScene windowScene)
