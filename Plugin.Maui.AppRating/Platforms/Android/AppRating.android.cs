@@ -1,8 +1,8 @@
 ﻿using Android.Content;
 using Android.Content.PM;
 using Android.OS;
-using Xamarin.Google.Android.Play.Core.Review;
-using Xamarin.Google.Android.Play.Core.Review.Testing;
+using Google.Android.Play.Core.Review;
+using Google.Android.Play.Core.Review.Testing;
 
 namespace Plugin.Maui.AppRating;
 
@@ -35,7 +35,7 @@ internal partial class AppRatingImplementation : Java.Lang.Object, IAppRating, A
 
             _inAppRateTcs?.TrySetCanceled();
 
-            _inAppRateTcs = new();
+            _inAppRateTcs = CreateCompletionSource();
         }
 
         _reviewManager = isTestOrDebugMode
@@ -170,13 +170,22 @@ internal partial class AppRatingImplementation : Java.Lang.Object, IAppRating, A
             {
                 System.Diagnostics.Trace.TraceError("There was an error launching in-app review. Please try again.");
 
+                if (_inAppRateTcs is not null)
+                {
+                    if (ThrowErrors)
+                        _inAppRateTcs.TrySetException(ex);
+                    else
+                        _inAppRateTcs.TrySetResult(false);
+                }
+
                 if (ThrowErrors)
                     throw;
 
                 System.Diagnostics.Trace.TraceError($"Error message: {ex.Message}");
                 System.Diagnostics.Trace.TraceError($"Stacktrace: {ex}");
-                _inAppRateTcs?.TrySetResult(false);
             }
         }
     }
+
+    private static TaskCompletionSource<bool> CreateCompletionSource() => new(TaskCreationOptions.RunContinuationsAsynchronously);
 }

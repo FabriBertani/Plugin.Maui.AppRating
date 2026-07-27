@@ -57,7 +57,7 @@
     </ItemGroup>
 
     <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
-        <PackageReference Include="Xamarin.Google.Android.Play.Review.Ktx" Version="2.0.2.4" />
+        <PackageReference Include="Xamarin.Google.Android.Play.Review.Ktx" Version="2.0.2.9" />
     </ItemGroup>
 
     <ItemGroup>
