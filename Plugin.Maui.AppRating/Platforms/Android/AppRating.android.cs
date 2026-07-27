@@ -8,11 +8,7 @@ namespace Plugin.Maui.AppRating;
 
 internal partial class AppRatingImplementation : Java.Lang.Object, IAppRating, Android.Gms.Tasks.IOnCompleteListener
 {
-#if NET9_0_OR_GREATER
     private readonly Lock _rateLock = new();
-#else
-    private readonly object _rateLock = new();
-#endif
 
     private TaskCompletionSource<bool>? _inAppRateTcs;
 
@@ -32,11 +28,7 @@ internal partial class AppRatingImplementation : Java.Lang.Object, IAppRating, A
     /// </summary>
     public async Task PerformInAppRateAsync(bool isTestOrDebugMode = false)
     {
-#if NET9_0_OR_GREATER
         lock (_rateLock)
-#else
-        lock (_rateLock)
-#endif
         {
             if (_inAppRateTcs is not null && !_inAppRateTcs.Task.IsCompleted)
                 throw new Exception("In-app rating flow is already in progress.");
@@ -153,11 +145,7 @@ internal partial class AppRatingImplementation : Java.Lang.Object, IAppRating, A
 
     public void OnComplete(Android.Gms.Tasks.Task task)
     {
-#if NET9_0_OR_GREATER
         lock (_rateLock)
-#else
-        lock (_rateLock)
-#endif
         {
             if (!task.IsSuccessful || _forceReturn)
             {
