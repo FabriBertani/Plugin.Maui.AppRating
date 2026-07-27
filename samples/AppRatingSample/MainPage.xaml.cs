@@ -29,7 +29,7 @@ namespace AppRatingSample
             {
                 await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
-                    if (!await DisplayAlert("Rate this App!", "Are you enjoying the so far? Would you like to leave a review in the store?", "Yes", "No"))
+                    if (!await DisplayAlertAsync("Rate this App!", "Are you enjoying the so far? Would you like to leave a review in the store?", "Yes", "No"))
                     {
                         Preferences.Set("application_counter", 0);
 
