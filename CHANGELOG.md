@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0 (2025/07/27)
+[Full Changelog](https://github.com/FabriBertani/Plugin.Maui.AppRating/compare/v1.2.3...v1.3.0)
+
+**Implemented enhancements:**
+- Removed .Net8 platform support.
+- Added .Net10 support to all platforms.
+- Update Android review package.
+- Updated sample project.
+
 ## 1.2.3 (2025/10/16)
 [Full Changelog](https://github.com/FabriBertani/Plugin.Maui.AppRating/compare/v1.2.2...v1.2.3)
 

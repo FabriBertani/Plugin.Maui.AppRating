@@ -10,7 +10,7 @@
 |     Platform      |   Version   |
 |-------------------|:-----------:|
 | .Net MAUI Android | API 21+     |
-| .Net MAUI iOS.    | iOS 14.2+   |
+| .Net MAUI iOS.    | iOS 15.0+   |
 | Mac Catalyst      | 15.0+       |
 | Windows           | 10.0.17763+ |
 
@@ -18,7 +18,7 @@
 `Plugin.Maui.AppRating` is available via NuGet, grab the latest package and install it in your solution:
 
 ```bash
-dotnet add package Plugin.Maui.AppRating --version 1.2.3
+dotnet add package Plugin.Maui.AppRating --version 1.3.0
 ```
 
 In your `MauiProgram` class add the following using statement:
@@ -33,13 +33,14 @@ Finally, add the default instance of the plugin as a singleton to inject it in y
 builder.Services.AddSingleton<IAppRating>(AppRating.Default);
 ```
 
-## Version 1.2.3
+## Version 1.3.0
 ### New Features
-- Improved logging by implementing `System.Diagnostics.Trace`.
-- Added better error handling and logging.
+- Removed `.Net8` platform support.
+- Added `.Net10` support to all platforms.
+- Update Android review package.
 - Updated sample project.
 
-Click [here](https://github.com/FabriBertani/Plugin.Maui.AppRating/releases/tag/v1.2.3) to see the full Changelog!
+Click [here](https://github.com/FabriBertani/Plugin.Maui.AppRating/releases/tag/v1.3.0) to see the full Changelog!
 
 ## :warning: Considerations regarding new platform policies :warning:
 ### Android
