@@ -22,16 +22,16 @@
         <Title>Plugin.Maui.AppRating</Title>
         <Authors>FabriBertani</Authors>
         <Description>An easy way to quickly add store rating reviews to your .Net MAUI app.</Description>
-        <Copyright>Copyright 2025 Fabricio Bertani</Copyright>
+        <Copyright>Copyright 2026 Fabricio Bertani</Copyright>
         <PackageProjectUrl>https://github.com/FabriBertani/Plugin.Maui.AppRating</PackageProjectUrl>
         <RepositoryUrl>https://github.com/FabriBertani/Plugin.Maui.AppRating</RepositoryUrl>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>dotnet-maui;maui;toolkit;Plugin.Maui.AppRating;kit;AppRating;rating;android;ios;windows;maccatalyst;</PackageTags>
-        <AssemblyVersion>1.2.3</AssemblyVersion>
-        <FileVersion>1.2.3</FileVersion>
-        <Version>1.2.3</Version>
-        <PackageVersion>1.2.3</PackageVersion>
+        <AssemblyVersion>1.3.0</AssemblyVersion>
+        <FileVersion>1.3.0</FileVersion>
+        <Version>1.3.0</Version>
+        <PackageVersion>1.3.0</PackageVersion>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <NeutralLanguage>en</NeutralLanguage>
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
